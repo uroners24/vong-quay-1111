@@ -289,7 +289,9 @@ html.lw-on,body.lw-on{margin:0;height:100%;overflow:hidden;background:#070b45;ov
     settings: { lose: 0, yoyo: 50 },
     after: ["yoyo", "sticker"],
     premium: ["hub", "adam", "non", "tuida", "wipe"],
-    quota: { hub: 1, adam: 3, non: 2, tuida: 1, wipe: 2, giam10: 2 },
+    quota: { hub: 1, adam: 0, non: 2, tuida: 1, wipe: 2, giam10: 2 },
+    /* Admin 05/11: sạc Adam hết hàng, 0% trúng; ô vẫn để trên vòng quay vì đã thiết kế. */
+    soldOut: ["adam"],
     rhythm: [3, 4],
     voucherMax: 2,
     waveSize: 50,
@@ -299,7 +301,7 @@ html.lw-on,body.lw-on{margin:0;height:100%;overflow:hidden;background:#070b45;ov
              variants: [{ id: "vang", name: "Vàng", swatch: "#d8b46a", qty: 6 }, { id: "den", name: "Đen", swatch: "#24262b", qty: 1 }] },
       adam: { kind: "item", tier: "Giải nhì", name: "Củ sạc Adam 20W", short: "Sạc Adam 20W", tile: "Sạc Adam",
               plan: { "2026-11-09": 5, "2026-11-10": 5, "2026-11-11": 5 }, note: "Trao củ sạc Adam USB-C PD 20W tại quầy.",
-              variants: [{ id: "adam", name: "Sạc Adam 20W", swatch: "#eef0f6", qty: 15 }] },
+              variants: [{ id: "adam", name: "Sạc Adam 20W", swatch: "#eef0f6", qty: 0 }] },
       non: { kind: "item", tier: "Giải ba", name: "Nón Hyper", short: "Nón Hyper",
              plan: { "2026-11-09": 2, "2026-11-10": 2, "2026-11-11": 2 }, note: "Trao nón Hyper tại quầy.",
              variants: [{ id: "hyper", name: "Nón Hyper", swatch: "#1c1f2b", qty: 6 }] },
@@ -495,7 +497,7 @@ html.lw-on,body.lw-on{margin:0;height:100%;overflow:hidden;background:#070b45;ov
      YOYO: "hàng nhiều") vẫn trao và sổ kho ghi âm cho tới khi nhập số; quà đã nhập thì phải còn hàng. */
   function available(k, s) {
     var p = prizeOf(k, s);
-    if (p.kind === "lose") { return false; }
+    if (p.kind === "lose" || CFG.soldOut.indexOf(k) >= 0) { return false; }
     if (p.kind === "voucher") { return CFG.voucherMax > waveGiven(k, s); }
     return stockIn(k, s) === 0 || leftOf(k, s) > 0;
   }
@@ -981,7 +983,7 @@ html.lw-on,body.lw-on{margin:0;height:100%;overflow:hidden;background:#070b45;ov
      không trống lúc mở cửa. Chỉ để hiển thị: không lưu vào state, không tính vào kho, Tổng quan hay CSV.
      Giờ của dòng mẫu lùi dần từ mốc đầu ngày (lưu riêng theo ngày, mở lại trang không bị nhảy). */
   var SAMPLE_KEY = "lucas_wheel_1111_sample";
-  var SAMPLE_GIFTS = ["non", "wipe", "adam", "giam10", "tuida"];
+  var SAMPLE_GIFTS = ["non", "wipe", "giam10", "tuida"];
   function seeded(text) {
     var h = 2166136261;
     for (var i = 0; text.length > i; i += 1) { h = Math.imul(h ^ text.charCodeAt(i), 16777619) >>> 0; }
