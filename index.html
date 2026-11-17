@@ -352,7 +352,6 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     <p class="tc-mech">Dùng dịch vụ hoặc mua hàng tại cửa hàng = <b>1 lượt</b> · lượt nào cũng có quà · chỉ tại cửa hàng</p>
     <div class="tc-tools">
       <div class="tc-days" id="tcDays" aria-label="Chương trình 27 đến 30 tháng 11"></div>
-      <span class="tc-demo" id="tcDemo" hidden>DEMO</span>
       <button class="tc-icon" id="tcMute" type="button" aria-label="Tắt / bật âm thanh"></button>
       <button class="tc-histbtn" id="tcHistBtn" type="button" aria-expanded="false" aria-controls="tcHist">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l3 2"/></svg>Lịch sử</button>
@@ -1739,7 +1738,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   var $ = function (id) { return document.getElementById(id); };
   var el = { root: $("tc"), stage: $("tcStage"), titles: $("tcTitles"), title: $("tcTitle"), deck: $("tcDeck"), cta: $("tcCta"),
              flyer: $("tcFlyer"), hint: $("tcHint"), rays: $("tcRays"), banner: $("tcBanner"), brand: $("tcBrand"), days: $("tcDays"),
-             demo: $("tcDemo"), mute: $("tcMute"), histBtn: $("tcHistBtn"), hist: $("tcHist"), history: $("tcHistory"), today: $("tcToday"),
+             mute: $("tcMute"), histBtn: $("tcHistBtn"), hist: $("tcHist"), history: $("tcHistory"), today: $("tcToday"),
              warn: $("tcWarn"), result: $("tcResult"), rcard: $("tcRCard"), adminLayer: $("tcAdminLayer"), admin: $("tcAdmin"), fx: $("tcFx"),
              head: document.querySelector(".tc-head") };
 
@@ -1812,8 +1811,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     A.setMuted(state.muted);
     el.mute.innerHTML = state.muted ? ICON_OFF : ICON_ON;
     el.mute.setAttribute("aria-pressed", state.muted ? "true" : "false");
-    el.demo.hidden = !(isDemo() && !isContent());
-    el.brand.classList.toggle("is-content", isContent());
+    el.brand.classList.toggle("is-content", isTest());
     el.days.innerHTML = E.dayList().map(function (d) {
       return "<span class=\"tc-day" + (d === day ? " is-today" : (day > d ? " is-past" : "")) + "\">" + d.slice(8, 10) + "</span>";
     }).join("");
@@ -1950,8 +1948,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var pick = ui.pick || E.defaultPick(r, state);
     setUi({ pick: pick });
     var picking = E.needsPick(r, state);
-    /* Content: thẻ quà y như khách thật (không nhãn) để quay video; chỉ bản DEMO mới gắn nhãn. */
-    var tag = r.test && !r.content ? "<span class=\"tc-rtag\">DEMO · KHÔNG TRỪ KHO</span>" : "";
+    /* DEMO / Content: thẻ quà y như khách thật, không nhãn (Admin 17/11 bỏ chữ DEMO). */
+    var tag = "";
     el.rcard.className = "tc-rcard" + (r.prize === "hub" ? " is-hub" : "");
     el.rcard.innerHTML = "<div class=\"tc-rphoto\">" + C.artHtml(r.prize, pick || r.variant || r.landed, state, "tcRPhoto") + "</div>" +
       "<div class=\"tc-rinfo\"><span class=\"tc-rtier\">" + esc(p.tier.toUpperCase()) + "</span><h2 class=\"tc-rname\">" + esc(p.name) + "</h2>" +
