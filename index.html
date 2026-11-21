@@ -128,8 +128,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg-scene{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
 .cg-scene.is-under{pointer-events:none}
 .cg-reflect{position:absolute;z-index:2;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 18%,rgba(255,255,255,.075) 24%,rgba(255,255,255,0) 31%,rgba(255,255,255,0) 64%,rgba(255,255,255,.045) 68%,rgba(255,255,255,0) 75%),linear-gradient(180deg,rgba(255,255,255,.06),transparent 22%);box-shadow:inset 0 0 calc(var(--u) * 6) rgba(0,0,0,.65)}
-/* Nút BẮT ĐẦU nằm dưới kệ trưng bày quà (kệ chiếm 10–32% chiều cao kính, src/backdrop.js) để khách vẫn thấy quà thật. */
-.cg-start{position:absolute;z-index:3;inset:33.5% 0 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:calc(var(--u) * 1.6);gap:calc(var(--u) * 2);background:radial-gradient(62% 52% at 50% 32%,rgba(0,0,0,.6),transparent 80%)}
+/* Nút BẮT ĐẦU nằm dưới dải kệ trưng bày (kệ chiếm ~9–25% chiều cao kính, src/backdrop.js) để khách vẫn thấy kệ. */
+.cg-start{position:absolute;z-index:3;inset:28.5% 0 0 0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding-top:calc(var(--u) * 1.6);gap:calc(var(--u) * 2);background:radial-gradient(62% 52% at 50% 32%,rgba(0,0,0,.6),transparent 80%)}
 .cg[data-phase]:not([data-phase=idle]) .cg-start,.cg.is-promo .cg-start{display:none}
 .cg-startbtn{position:relative;isolation:isolate;overflow:hidden;padding:calc(var(--u) * 2.6) calc(var(--u) * 9.5) calc(var(--u) * 2.8)!important;border-radius:999px!important;background:var(--goldh)!important;background-size:200% 100%!important;color:var(--ink)!important;font-family:var(--fv)!important;font-weight:900;font-size:calc(var(--u) * 6);letter-spacing:.05em;box-shadow:0 calc(var(--u) * .9) 0 var(--a4),0 calc(var(--u) * 3) calc(var(--u) * 7) rgba(var(--acr),.4)}
 .cg-startbtn:active{transform:translateY(calc(var(--u) * .6));box-shadow:0 calc(var(--u) * .3) 0 var(--a4),0 calc(var(--u) * 2) calc(var(--u) * 5) rgba(var(--acr),.3)}
@@ -259,6 +259,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg-pt img{max-width:100%;max-height:64px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,.5))}
 .cg-prizes li.is-top .cg-pt img{max-height:92px;max-width:150px}
 .cg-pt .cg-tk small{display:none}
+/* Ô "Quà bí ẩn" trong bảng Quà trong máy (thay cho hub / túi da / khăn / Giảm 10%: Admin 21/11 giấu quà đặc biệt). */
+.cg-prizes li.is-mystery{border-color:rgba(var(--acr),.55);background:radial-gradient(100% 100% at 50% 30%,rgba(var(--acr),.18),rgba(var(--acr),.02) 70%),#111014}
+.cg-q{display:grid;place-items:center;width:54px;height:54px;border-radius:12px;border:2px solid var(--g1);font-family:var(--fv);font-weight:900;font-size:36px;line-height:1;color:var(--g0);
+  box-shadow:0 0 14px rgba(var(--acr),.55),inset 0 0 10px rgba(var(--acr),.35)}
+.cg-prizes-more{margin:12px 0 0!important;font-family:var(--fv);font-weight:900;font-size:15px!important;color:var(--g1)!important}
 .cg-pn{display:flex;flex-direction:column;min-width:0}
 .cg-pn b{font-size:14px;font-weight:700;line-height:1.2}
 .cg-pn small{font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
@@ -424,6 +429,52 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg-blocked small{font-size:calc(var(--u) * 1.8);font-weight:700;color:var(--mute)}
 .cg.is-blocked .cg-start,.cg.is-blocked .cg-promo{display:none!important}
 
+/* ---------- MacBook ở quầy (src/desk.js): chữ chuột / bàn phím thay chữ chạm; chưa nối trạm núm thì gợi ý phím ---------- */
+.t-desk,.t-keys{display:none}
+.cg.is-desk .t-desk{display:inline}
+.cg.is-desk .t-tap{display:none}
+.cg.is-keys .t-keys{display:inline!important}
+.cg.is-keys .t-knob,.cg.is-keys .cg-ctrl .t-sweep,.cg.is-keys .cg-ctrl .t-dial,.cg.is-keys .cg-ctrl .t-touch,.cg.is-keys .cg-hint .t-touch,.cg.is-keys .cg-hint .t-dial{display:none!important}
+.cg.is-desk .cg-slot{bottom:max(30px,env(safe-area-inset-bottom))}
+/* Tủ ngang kín màn hình (MacBook): chừa hàng trên cho logo + "Quà trong máy", mái đèn thấp hơn (đã trải ngang). */
+.cg.is-wide{--crown:14.5;--hero:5.8}
+.cg.is-wide .cg-slot{top:max(8px,env(safe-area-inset-top));bottom:max(8px,env(safe-area-inset-bottom));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
+.cg.is-wide .cg-floor{display:none}
+/* logo + nút vào 2 góc bảng hiệu (src/app.js placeChrome) */
+.cg-crown>.cg-brand{position:absolute;z-index:3;left:calc(var(--u) * 5.5);top:50%;transform:translateY(-50%)}
+.cg-crown>.cg-brand img{height:calc(var(--u) * 6.4)}
+.cg-crown>.cg-tools{position:absolute;z-index:3;right:calc(var(--u) * 5);top:50%;transform:translateY(-50%);margin:0}
+/* bàn điều khiển ngang: chữ hướng dẫn trái · đồng hồ giữa · trạng thái (huy hiệu D100H, "Bấm chuột…", cảnh báo) phải */
+.cg-status{display:none}
+/* Bàn điều khiển ngang (Admin 21/11 "hơi mất cân đối"): 1 cụm cân đối ở giữa — [D100H][hướng dẫn] [ĐỒNG HỒ] [trạng thái][GẮP!],
+   2 bên rộng bằng nhau nên đồng hồ đúng tâm tủ, không còn khoảng trống lớn. */
+.cg.is-wide .cg-deck{grid-template-columns:auto auto auto;justify-content:center;column-gap:calc(var(--u) * 3)}
+.cg.is-wide .cg-dial{width:calc(var(--u) * var(--deck) * .9)}
+.cg.is-wide .cg-panel{flex-direction:row;justify-content:center;align-items:center;gap:calc(var(--u) * 3.5);padding:0}
+.cg.is-wide .cg-ctrl{order:1;flex:0 0 calc(var(--u) * 40);min-width:0;align-items:flex-start;text-align:left}
+.cg.is-wide .cg-timer{order:2;flex:none}
+.cg.is-wide .cg-status{order:3;flex:0 0 calc(var(--u) * 40);min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:calc(var(--u) * .7)}
+/* Đế ngang: cửa LẤY QUÀ đúng dưới máng QUÀ (--chx / --chw từ src/scene.js), bảng LED lấp phần còn lại, khe xu sát mép phải như bàn điều khiển. */
+.cg.is-wide .cg-base{grid-template-columns:var(--chw,28%) minmax(0,1fr) calc(var(--u) * 7);padding-left:var(--chx,0)}
+.cg-status>.cg-badge,.cg-status>.cg-unlock,.cg-status>.cg-warn{position:static;left:auto;right:auto;bottom:auto;transform:none;margin:0}
+.cg-status>.cg-badge{transition:opacity .35s}
+.cg.is-wide .cg-timer span{font-size:calc(var(--u) * 6.2)}
+/* màn giới thiệu D100H kiểu ngang: ảnh to · chữ · QR, nền mờ để vẫn thấy kệ + đống túi phía sau */
+.cg.is-wide .cg-promo{padding:calc(var(--u) * 2) calc(var(--u) * 6);gap:calc(var(--u) * 2.4)}
+.cg.is-wide .cg-promo-card{grid-template-columns:auto minmax(0,1fr) auto;grid-template-areas:"photo txt qr";max-width:calc(var(--u) * 168);column-gap:calc(var(--u) * 5)}
+.cg.is-wide .cg-promo-photo{width:auto;height:calc(var(--u) * 40);max-width:calc(var(--u) * 64)}
+.cg.is-wide .cg-promo-kick{font-size:calc(var(--u) * 2.1)}
+.cg.is-wide .cg-promo h2{font-size:calc(var(--u) * 6.4);margin-bottom:calc(var(--u) * 2)}
+.cg.is-wide .cg-promo li{font-size:calc(var(--u) * 2.7);padding-left:calc(var(--u) * 3.2)}
+.cg.is-wide .cg-promo li::before{width:calc(var(--u) * 1.8);height:calc(var(--u) * 1.8)}
+.cg.is-wide .cg-promo-shop{font-size:calc(var(--u) * 2.4);padding:calc(var(--u) * .7) calc(var(--u) * 2)}
+.cg.is-wide .cg-qr{flex-direction:column;gap:calc(var(--u) * 1.2)}
+.cg.is-wide .cg-qr img{width:calc(var(--u) * 21);height:calc(var(--u) * 21)}
+.cg.is-wide .cg-qr figcaption{max-width:none;text-align:center;font-size:calc(var(--u) * 2)}
+.cg.is-wide .cg-mark{display:none}
+.cg.is-wide .cg-sign{gap:calc(var(--u) * .7)}
+.cg.is-keys .cg-ctrl .t-keys{font-size:calc(var(--u) * 2.1);font-weight:800;color:#fff}
+
 /* ---------- dọc (iPad 820×1180, TV 1080×1920): tủ cao, mái + bàn điều khiển + đế cao hơn ---------- */
 @media (orientation:portrait){
   .cg{--crown:17.5;--deck:21;--base:12;--hero:6.9}
@@ -557,9 +608,24 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg[data-theme=cyber] .cg-done:active{box-shadow:0 2px 0 #3b1d8f}
 .cg[data-theme=cyber] .cg-chip.is-on{color:var(--ink)!important}
 .cg[data-theme=cyber] .cg-prizebox,.cg[data-theme=cyber] .cg-admin{background:linear-gradient(180deg,#13143a,#0a0a20)}
+.cg[data-theme=cyber] .cg-prizes li.is-mystery{border-color:rgba(var(--mgr),.6);background:radial-gradient(100% 100% at 50% 30%,rgba(var(--mgr),.2),rgba(var(--mgr),.02) 70%),#0d0e2a}
+.cg[data-theme=cyber] .cg-q{border-color:var(--mg);color:#ffe6fa;box-shadow:0 0 14px rgba(var(--mgr),.6),inset 0 0 10px rgba(var(--mgr),.35)}
 .cg[data-theme=cyber] .cg-prizes li.is-top{background:radial-gradient(120% 140% at 0% 50%,rgba(95,243,255,.2),rgba(255,79,216,.06) 60%),#0d0e2a}
 
 @media (prefers-reduced-motion:reduce){.cg-led-track,.cg[data-theme=cyber] .cg-tube::before,.cg[data-theme=cyber] .cg-bf-k,.cg[data-theme=cyber] .cg-card,.cg[data-theme=cyber] .cg-name,.cg-glints>span{animation:none!important}}
+
+/* ---------- máy yếu (src/perf.js → root.is-lite, hoặc ?lite=1): bỏ hiệu ứng phụ, giữ cảnh chính ---------- */
+.cg.is-lite .cg-haze,.cg.is-lite .cg-dust,.cg.is-lite .cg-glints{display:none}
+.cg.is-lite .cg-rays{animation:none}
+.cg.is-lite .cg-tube::before,.cg.is-lite .cg-bf-k{animation:none}
+.cg.is-lite .cg-startbtn::after,.cg.is-lite[data-phase=play] .cg-grab::after{animation:none;opacity:0}
+.cg[data-theme=cyber].is-lite .cg-reflect{background:linear-gradient(180deg,rgba(95,243,255,.06),transparent 22%)}
+.cg[data-theme=cyber].is-lite .cg-cab{box-shadow:0 0 0 1.5px rgba(95,243,255,.85),0 0 0 calc(var(--u) * .6) #060716,0 0 0 calc(var(--u) * .6 + 1.5px) rgba(var(--mgr),.7),0 calc(var(--u) * 2) calc(var(--u) * 5) rgba(0,0,0,.75)}
+
+/* tủ ngang (MacBook): màn giới thiệu D100H nền mờ hơn + quầng neon sau ảnh để không trống */
+.cg[data-theme=cyber].is-wide .cg-promo{background:radial-gradient(55% 80% at 30% 50%,rgba(95,243,255,.16),transparent 70%),radial-gradient(70% 90% at 50% 45%,rgba(16,8,44,.86),rgba(4,4,16,.66))}
+.cg[data-theme=cyber].is-wide .cg-promo-photo{filter:drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 3) rgba(0,0,0,.75)) drop-shadow(0 0 calc(var(--u) * 3) rgba(95,243,255,.35))}
+.cg[data-theme=cyber].is-wide .cg-qr img{box-shadow:0 0 0 calc(var(--u) * .4) rgba(var(--mgr),.7),0 0 calc(var(--u) * 3) rgba(var(--mgr),.45)}
 </style>
 </head>
 <body>
@@ -580,21 +646,22 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 <canvas class="cg-scene" id="cgScene" aria-label="Tủ kính máy gắp túi đen"></canvas>
 <span class="cg-glints" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span><span></span></span>
 <div class="cg-reflect" aria-hidden="true"></div>
-<div class="cg-blocked" id="cgBlocked" role="alert" hidden><b>Hết quà</b><span>Nhập thêm YOYO / móc khóa trong Quản lý</span><small>Dành cho nhân viên · chạm 5 lần vào logo để mở Quản lý</small></div>
-<div class="cg-start" id="cgStartWrap"><button class="cg-startbtn" id="cgStart" type="button">BẮT ĐẦU</button><small>1 lượt · 15 giây · túi nào cũng có quà</small><p class="cg-dialhint"><svg class="cg-knob" viewBox="0 0 64 64" aria-hidden="true"><path class="cg-knob-arr" d="M8.5 33A24 24 0 0 1 19 13.5M8.5 33l-3.2-5.6M8.5 33l5.4-3.4"/><path class="cg-knob-arr" d="M55.5 33A24 24 0 0 0 45 13.5M55.5 33l3.2-5.6M55.5 33l-5.4-3.4"/><circle class="cg-knob-base" cx="32" cy="36" r="17"/><circle class="cg-knob-cap" cx="32" cy="36" r="12.5"/><path class="cg-knob-dot" d="M32 26.5v5"/></svg><span>Nhấn núm để bắt đầu</span></p></div>
+<div class="cg-blocked" id="cgBlocked" role="alert" hidden><b>Hết quà</b><span>Nhập thêm YOYO / móc khóa trong Quản lý</span><small>Dành cho nhân viên · <span class="t-tap">chạm</span><span class="t-desk">bấm</span> 5 lần vào logo để mở Quản lý</small></div>
+<div class="cg-start" id="cgStartWrap"><button class="cg-startbtn" id="cgStart" type="button">BẮT ĐẦU</button><small>1 lượt · 15 giây · túi nào cũng có quà</small><p class="cg-dialhint"><svg class="cg-knob" viewBox="0 0 64 64" aria-hidden="true"><path class="cg-knob-arr" d="M8.5 33A24 24 0 0 1 19 13.5M8.5 33l-3.2-5.6M8.5 33l5.4-3.4"/><path class="cg-knob-arr" d="M55.5 33A24 24 0 0 0 45 13.5M55.5 33l3.2-5.6M55.5 33l-5.4-3.4"/><circle class="cg-knob-base" cx="32" cy="36" r="17"/><circle class="cg-knob-cap" cx="32" cy="36" r="12.5"/><path class="cg-knob-dot" d="M32 26.5v5"/></svg><span class="t-knob">Nhấn núm để bắt đầu</span><span class="t-keys">Bấm Space để bắt đầu</span></p></div>
 <div class="cg-promo" id="cgPromo" hidden aria-live="polite"><div class="cg-promo-card">
 <img class="cg-promo-photo" src="data:image/webp;base64,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" alt="Ulanzi Dial D100H" draggable="false">
 <div class="cg-promo-txt"><p class="cg-promo-kick">Núm xoay trên máy gắp này</p><h2>Ulanzi Dial D100H</h2>
 <ul><li>Núm xoay haptic chỉnh mượt</li><li>7 phím tùy chỉnh phím tắt</li><li>Bluetooth + USB-C · pin 1000mAh</li></ul>
 <p class="cg-promo-shop">Có bán tại Lucas</p></div>
 <figure class="cg-qr"><img id="cgQr" src="data:image/webp;base64,UklGRhABAABXRUJQVlA4TAMBAAAvN8FNAA/wiP9L/L/if/7jAXDbSBLkVP5J0+i9h8wB5ET0fwL6T+39Uooi77tov1BptZeBhBKJSDiRkqDUqVQqyoWshJAkaQ/jPUk/vc/imyiN9NeHIFuDpCh7GURUWj9EDqNQUZFSkfR5ElKhkoIkuIsiz1ShSqHDIKS1SUqJu0jlnUqlDN2GKFUS5dVhqCJESYmonEWFFJRQinAXpEQqJRREZ5FS6dFks5eh0kJUenUYngVNUaJ1FwmlPCQZ6TL0VKXV2svIppfWs3IW37IJSiWH4d0qks3oLlpRlEhU3AYmRamSZ7kQSVAo5UCoqJJn6fMkVsFHlOI03hEqCFK5i3/SAA==" width="312" height="312" alt="Mã QR trang sản phẩm Ulanzi Dial D100H" draggable="false"><figcaption>Quét mã xem sản phẩm</figcaption></figure>
-</div><p class="cg-promo-cta"><svg class="cg-knob" viewBox="0 0 64 64" aria-hidden="true"><path class="cg-knob-arr" d="M8.5 33A24 24 0 0 1 19 13.5M8.5 33l-3.2-5.6M8.5 33l5.4-3.4"/><path class="cg-knob-arr" d="M55.5 33A24 24 0 0 0 45 13.5M55.5 33l3.2-5.6M55.5 33l-5.4-3.4"/><circle class="cg-knob-base" cx="32" cy="36" r="17"/><circle class="cg-knob-cap" cx="32" cy="36" r="12.5"/><path class="cg-knob-dot" d="M32 26.5v5"/></svg><span>Nhấn núm · chơi thử ngay</span></p></div>
+</div><p class="cg-promo-cta"><svg class="cg-knob" viewBox="0 0 64 64" aria-hidden="true"><path class="cg-knob-arr" d="M8.5 33A24 24 0 0 1 19 13.5M8.5 33l-3.2-5.6M8.5 33l5.4-3.4"/><path class="cg-knob-arr" d="M55.5 33A24 24 0 0 0 45 13.5M55.5 33l3.2-5.6M55.5 33l-5.4-3.4"/><circle class="cg-knob-base" cx="32" cy="36" r="17"/><circle class="cg-knob-cap" cx="32" cy="36" r="12.5"/><path class="cg-knob-dot" d="M32 26.5v5"/></svg><span class="t-knob">Nhấn núm · chơi thử ngay</span><span class="t-keys">Bấm Space · chơi thử ngay</span></p></div>
 </div>
 <div class="cg-deck">
 <div class="cg-dial" id="cgDial"><svg class="cg-d100" viewBox="0 0 120 124" aria-hidden="true"><defs><linearGradient id="cgD100Body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#45454c"/><stop offset=".5" stop-color="#2c2c32"/><stop offset="1" stop-color="#1b1b1f"/></linearGradient><radialGradient id="cgD100Cap" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#5a5a62"/><stop offset=".55" stop-color="#2f2f35"/><stop offset="1" stop-color="#18181c"/></radialGradient></defs><rect class="d-side" x="2" y="40" width="7" height="20" rx="2.5"/><rect class="d-side" x="2" y="64" width="7" height="20" rx="2.5"/><rect class="d-side" x="111" y="40" width="7" height="20" rx="2.5"/><rect class="d-side" x="111" y="64" width="7" height="20" rx="2.5"/><rect x="7" y="6" width="106" height="114" rx="16" fill="url(#cgD100Body)" stroke="#55555d" stroke-width="1.2"/><path class="d-top" d="M15 9h90a6 6 0 0 1 6 6v14H9V15a6 6 0 0 1 6-6z"/><path class="d-gap" d="M43 9v20M77 9v20M9 29h102"/><rect class="d-notch" x="54" y="13" width="12" height="2.4" rx="1.2"/><circle class="d-led" cx="92" cy="40" r="2.6"/><g class="cg-d100-knob"><circle cx="60" cy="76" r="33" fill="#141417"/><circle class="d-knurl" cx="60" cy="76" r="31"/><circle cx="60" cy="76" r="27" fill="url(#cgD100Cap)" stroke="#5c5c64" stroke-width="1"/><circle class="d-dimple" cx="60" cy="58" r="4.2"/></g><path class="d-arr l" d="M22 100a40 40 0 0 1-4-34M22 100l-6.5-.6M22 100l1.4-6.4"/><path class="d-arr r" d="M98 100a40 40 0 0 0 4-34M98 100l6.5-.6M98 100l-1.4-6.4"/></svg><button class="cg-kb k-left" type="button" data-step="-1" aria-label="Móc sang trái" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><button class="cg-kb k-right" type="button" data-step="1" aria-label="Móc sang phải" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
 <div class="cg-panel">
 <div class="cg-timer" id="cgTimer" aria-live="polite"><span id="cgTime">15</span><small>GIÂY</small></div>
-<p class="cg-ctrl"><b>Điều khiển bằng Ulanzi Dial D100H</b><span class="t-sweep">Nhấn núm đúng lúc để gắp</span><span class="t-sweep">Phím ◀ ▶ bên hông để lái</span><span class="t-dial">Xoay để di chuyển · Nhấn để gắp</span><span class="t-touch">Giữ ◀ ▶ trên núm hoặc kéo trên kính</span></p>
+<p class="cg-ctrl"><b>Điều khiển bằng Ulanzi Dial D100H</b><span class="t-sweep">Nhấn núm đúng lúc để gắp</span><span class="t-sweep">Phím ◀ ▶ bên hông để lái</span><span class="t-dial">Xoay để di chuyển · Nhấn để gắp</span><span class="t-touch">Giữ ◀ ▶ trên núm hoặc kéo trên kính</span><span class="t-keys">← → để lái · Space để gắp</span></p>
+<div class="cg-status" id="cgStatus"></div>
 </div>
 <div class="cg-go"><svg class="cg-ring" viewBox="0 0 100 100" aria-hidden="true"><circle class="cg-ring-bg" cx="50" cy="50" r="46"/><circle class="cg-ring-glow" cx="50" cy="50" r="46"/><circle class="cg-ring-fg" id="cgRing" cx="50" cy="50" r="46"/></svg><button class="cg-grab" id="cgGrab" type="button" disabled>GẮP!</button></div>
 </div>
@@ -607,10 +674,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 </section>
 </main>
 <p class="cg-warn" id="cgWarn" hidden></p>
-<p class="cg-unlock" id="cgUnlock">Chạm màn hình 1 lần để bật núm</p>
-<div class="cg-layer cg-open" id="cgOpen" hidden><div class="cg-openbag" id="cgOpenBag"><span class="cg-half h-l"><canvas></canvas></span><span class="cg-half h-r"><canvas></canvas></span><span class="cg-flash"></span></div><p class="cg-hint" id="cgHint"><span class="t-touch">CHẠM VÀO TÚI ĐỂ XÉ</span><span class="t-dial">NHẤN NÚM ĐỂ XÉ TÚI</span></p></div>
+<p class="cg-unlock" id="cgUnlock"><span class="t-tap">Chạm màn hình 1 lần để bật núm</span><span class="t-desk">Bấm chuột 1 lần để bật âm thanh</span></p>
+<div class="cg-layer cg-open" id="cgOpen" hidden><div class="cg-openbag" id="cgOpenBag"><span class="cg-half h-l"><canvas></canvas></span><span class="cg-half h-r"><canvas></canvas></span><span class="cg-flash"></span></div><p class="cg-hint" id="cgHint"><span class="t-touch">CHẠM VÀO TÚI ĐỂ XÉ</span><span class="t-dial">NHẤN NÚM ĐỂ XÉ TÚI</span><span class="t-keys">BẤM SPACE ĐỂ XÉ TÚI</span></p></div>
 <div class="cg-layer cg-result" id="cgResult" hidden><div class="cg-rays"></div><div class="cg-card" id="cgCard"></div></div>
-<div class="cg-layer cg-prizelayer" id="cgPrizeLayer" hidden><div class="cg-prizebox"><h2>Quà trong máy</h2><ul class="cg-prizes" id="cgPrizes"></ul><p>Chạm bất kỳ đâu để đóng</p></div></div>
+<div class="cg-layer cg-prizelayer" id="cgPrizeLayer" hidden><div class="cg-prizebox"><h2>Quà trong máy</h2><ul class="cg-prizes" id="cgPrizes"></ul><p class="cg-prizes-more">Túi nào cũng có quà · và các phần quà đặc biệt bí ẩn</p><p><span class="t-tap">Chạm bất kỳ đâu để đóng</span><span class="t-desk">Bấm bất kỳ đâu để đóng</span></p></div></div>
 <div class="cg-layer cg-adminlayer" id="cgAdminLayer" hidden><div class="cg-admin" id="cgAdmin"></div></div>
 <canvas class="cg-confetti" id="cgConfetti"></canvas>
 </div>
@@ -1316,8 +1383,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 /* Máy gắp · vách trong tủ kính + máng quà, vẽ sẵn 1 lần mỗi lần đổi cỡ / đổi giao diện (không vẽ lại mỗi khung).
    Black Friday: sơn mài đen, quạt art-deco vàng dưới ray, 3 đèn rọi ấm, sàn gương có viền vàng.
    Cyber: tường navy kẻ lưới, chân trời hồng, sàn lưới phối cảnh cyan, ống neon trần + 2 bên.
-   20/11 (Admin duyệt): kệ trưng bày quà đặc biệt THẬT trên vách sau, cao hơn đống túi ("TRONG TÚI CÓ THỂ LÀ" + ảnh hub / nón / túi da /
-   khăn lau, tên bằng BVP Black, không giá / %) — cho khách hiểu túi bí ẩn chứa gì; kệ là tủ kính treo tường, móc không gắp tới. */
+   20/11 → 21/11: kệ trưng bày nhỏ trên vách sau, cao hơn đống túi ("TRONG TÚI CÓ THỂ LÀ": túi YOYO · móc khóa · nón + ô "Quà bí ẩn";
+   không giá / %) — kệ là tủ kính treo tường, móc không gắp tới. */
 (function (LC) {
   "use strict";
   var A = LC.art;
@@ -1340,71 +1407,112 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     A.railBar(g, W * 0.04, W * 0.96, H * 0.075, H * 0.012);
   }
 
-  /* ---------- kệ trưng bày quà thật (vẽ sẵn vào vách) ---------- */
-  var SHELF = [["hub", "Hub JCPAL"], ["non", "Nón Hyper"], ["tuida", "Túi da đeo chéo"], ["wipe", "Khăn Flash Wipe"]];
+  /* ---------- kệ trưng bày (vẽ sẵn vào vách) ----------
+     Admin 21/11 ("làm gọn lại… ẩn mấy cái đặc biệt đi, hiện yoyo, móc khóa, nón thôi"): dải kệ nhỏ gọn, 3 quà thật (túi YOYO xòe 3 màu,
+     móc khóa Lucas, nón Hyper) + 1 ô "Quà bí ẩn" (hộp neon có dấu ?), không lộ tên / ảnh hub, túi da, khăn. */
+  var SHELF = [["yoyo", "Túi YOYO", ["yoyo_lemon", "yoyo_orange", "yoyo_pink"]], ["mockhoa", "Móc khóa Lucas", ["mockhoa"]],
+               ["non", "Nón Hyper", ["non"]], ["mystery", "Quà bí ẩn", []]];
   var shelfImgs = null;
-  /* imgs = { hub, non, tuida, wipe } ảnh đã nạp xong (HTMLImageElement). */
+  /* imgs = { yoyo_pink, yoyo_orange, yoyo_lemon, mockhoa, non } ảnh đã nạp xong (HTMLImageElement). */
   function setShelf(imgs) { shelfImgs = imgs; }
-  function shelfBox(W, H) { return { x: W * 0.235, y: H * 0.1, w: W * 0.74, h: H * 0.215 }; }
+  /* Kính đứng (iPad): kệ lệch phải, chừa chỗ cho móc đứng chờ. Kính rộng (MacBook): kệ ở giữa vách, ngay trên nút BẮT ĐẦU
+     (Admin 21/11 bỏ bảng neon logo lớn trên vách → kệ ra giữa cho cân). */
+  function shelfBox(W, H) {
+    if (W / H >= 1.9) { var ww = Math.min(W * 0.5, H * 1.2); return { x: W * 0.5 - ww / 2, y: H * 0.1, w: ww, h: H * 0.155 }; }
+    var w = Math.min(W * 0.56, H * 1.05); return { x: W * 0.255 + (W * 0.7 - w) / 2, y: H * 0.105, w: w, h: H * 0.145 };
+  }
   function fitFont(g, text, px, maxW) {
     g.font = "900 " + px + "px " + FV;
     var m = g.measureText(text).width;
     if (m > maxW) { g.font = "900 " + Math.floor(px * maxW / m) + "px " + FV; }
   }
   function shelfPanel(g, b, P) {
-    var r = Math.min(b.w, b.h) * 0.08;
-    g.fillStyle = P.edge ? "rgba(9,10,34,.78)" : "rgba(14,12,8,.78)";
+    var r = Math.min(b.w, b.h) * 0.12;
+    g.fillStyle = P.edge ? "rgba(9,10,34,.72)" : "rgba(14,12,8,.72)";
     A.roundRect(g, b.x, b.y, b.w, b.h, r); g.fill();
     g.save();
-    g.shadowColor = P.acc[1]; g.shadowBlur = Math.max(4, b.h * 0.08);
-    g.strokeStyle = rgba(P.line, 0.8); g.lineWidth = 1.5;
+    g.shadowColor = P.acc[1]; g.shadowBlur = Math.max(3, b.h * 0.07);
+    g.strokeStyle = rgba(P.line, 0.7); g.lineWidth = 1.2;
     A.roundRect(g, b.x, b.y, b.w, b.h, r); g.stroke();
     g.restore();
-    var glass = g.createLinearGradient(b.x, b.y, b.x + b.w * 0.6, b.y + b.h);
-    glass.addColorStop(0, "rgba(255,255,255,.07)"); glass.addColorStop(0.35, "rgba(255,255,255,0)"); glass.addColorStop(1, "rgba(255,255,255,0)");
-    g.fillStyle = glass; A.roundRect(g, b.x, b.y, b.w, b.h, r); g.fill();
   }
   function shelfHeader(g, b, P, fs) {
     var text = "TRONG TÚI CÓ THỂ LÀ";
-    fitFont(g, text, fs, b.w * 0.6);
+    fitFont(g, text, fs, b.w * 0.55);
     g.textAlign = "center"; g.textBaseline = "middle";
-    var w = g.measureText(text).width + fs * 1.6; var h = fs * 1.5;
+    var w = g.measureText(text).width + fs * 1.4; var h = fs * 1.45;
     g.fillStyle = P.edge ? "#0b0b28" : "#120f08";
     A.roundRect(g, b.x + b.w / 2 - w / 2, b.y - h / 2, w, h, h / 2); g.fill();
-    g.strokeStyle = P.edge ? "rgba(255,79,216,.85)" : rgba(P.line, 0.8); g.lineWidth = 1.2; g.stroke();
+    g.strokeStyle = P.edge ? "rgba(255,79,216,.8)" : rgba(P.line, 0.8); g.lineWidth = 1; g.stroke();
     g.fillStyle = P.edge ? "#ffd6f6" : P.acc[0];
     g.fillText(text, b.x + b.w / 2, b.y + fs * 0.05);
   }
-  function shelfItem(g, img, label, cx, b, colW, P, fs) {
-    var top = b.y + b.h * 0.14; var bottom = b.y + b.h * 0.7; var ph = bottom - top;
-    var spot = g.createRadialGradient(cx, bottom - ph * 0.3, 0, cx, bottom - ph * 0.3, colW * 0.5);
-    spot.addColorStop(0, rgba(P.spot, 0.28)); spot.addColorStop(1, rgba(P.spot, 0));
-    g.fillStyle = spot; g.fillRect(cx - colW / 2, top, colW, ph);
-    if (img && img.naturalWidth) {
-      var k = Math.min(colW * 0.8 / img.naturalWidth, ph / img.naturalHeight);
-      var w = img.naturalWidth * k; var h = img.naturalHeight * k;
-      g.drawImage(img, cx - w / 2, bottom - h, w, h);
-    }
-    g.fillStyle = A.goldGrad(g, cx - colW * 0.4, 0, cx + colW * 0.4, 0); g.globalAlpha = 0.85;
-    g.fillRect(cx - colW * 0.42, bottom + b.h * 0.02, colW * 0.84, Math.max(1.5, b.h * 0.014)); g.globalAlpha = 1;
-    fitFont(g, label, fs, colW * 0.92);
-    g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = "#f2f7ff";
-    g.fillText(label, cx, b.y + b.h * 0.86);
+  function fitImage(g, img, cx, bottom, maxW, maxH, rot) {
+    if (!img || !img.naturalWidth) { return; }
+    var k = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight);
+    var w = img.naturalWidth * k; var h = img.naturalHeight * k;
+    g.save(); g.translate(cx, bottom); g.rotate(rot || 0);
+    g.drawImage(img, -w / 2, -h, w, h);
+    g.restore();
   }
-  /* Kệ 4 ngăn: khung kính viền neon, nhãn trên đầu, mỗi ngăn 1 ảnh thật + vạch sáng + tên quà. */
+  /* Túi YOYO: 3 màu xòe nhẹ như quạt (sau nhỏ, trước to). */
+  function drawYoyo(g, srcs, cx, bottom, colW, ph) {
+    var spots = [[-0.2, -0.22, 0.78], [0.2, 0.22, 0.78], [0, 0, 0.92]];
+    srcs.forEach(function (s, i) {
+      var sp = spots[i] || spots[2];
+      fitImage(g, shelfImgs[s], cx + sp[0] * colW, bottom, colW * 0.55 * sp[2], ph * sp[2], sp[1]);
+    });
+  }
+  /* Ô bí ẩn: hộp neon hồng, dấu ? phát sáng, vài đốm sáng. */
+  function drawMystery(g, cx, top, bottom, colW, P) {
+    var s = Math.min(colW * 0.6, (bottom - top) * 0.95); var x = cx - s / 2; var y = bottom - s;
+    g.save();
+    g.fillStyle = P.edge ? "rgba(30,10,60,.9)" : "rgba(30,24,10,.9)";
+    A.roundRect(g, x, y, s, s, s * 0.16); g.fill();
+    g.shadowColor = P.edge || P.acc[1]; g.shadowBlur = s * 0.25;
+    g.strokeStyle = P.edge || P.acc[1]; g.lineWidth = Math.max(1.5, s * 0.04);
+    A.roundRect(g, x, y, s, s, s * 0.16); g.stroke();
+    g.font = "900 " + Math.round(s * 0.72) + "px " + FV; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillStyle = P.edge ? "#ffe6fa" : P.acc[0];
+    g.fillText("?", cx, y + s * 0.54);
+    g.restore();
+  }
+  function shelfItem(g, item, cx, b, colW, P, fs) {
+    var top = b.y + b.h * 0.16; var bottom = b.y + b.h * 0.68; var ph = bottom - top;
+    var spot = g.createRadialGradient(cx, bottom - ph * 0.3, 0, cx, bottom - ph * 0.3, colW * 0.45);
+    spot.addColorStop(0, rgba(item[0] === "mystery" && P.edge ? "255,79,216" : P.spot, 0.24)); spot.addColorStop(1, rgba(P.spot, 0));
+    g.fillStyle = spot; g.fillRect(cx - colW / 2, top, colW, ph);
+    if (item[0] === "mystery") { drawMystery(g, cx, top, bottom, colW, P); }
+    else if (item[0] === "yoyo") { drawYoyo(g, item[2], cx, bottom, colW, ph); }
+    else if (item[0] === "mockhoa") {
+      /* Móc khóa da màu tối, mảnh: vầng sáng riêng + làm sáng ảnh (ctx.filter; Safari cũ bỏ qua cũng không sao). */
+      var halo = g.createRadialGradient(cx, bottom - ph * 0.5, 0, cx, bottom - ph * 0.5, ph * 0.6);
+      halo.addColorStop(0, rgba(P.spot, 0.42)); halo.addColorStop(1, rgba(P.spot, 0));
+      g.fillStyle = halo; g.fillRect(cx - colW / 2, top - ph * 0.1, colW, ph * 1.1);
+      g.save(); g.filter = "brightness(1.9) contrast(1.15)";
+      fitImage(g, shelfImgs.mockhoa, cx, bottom, colW * 0.74, ph * 1.08, -0.18);
+      g.restore();
+    }
+    else { fitImage(g, shelfImgs[item[2][0]], cx, bottom, colW * 0.74, ph, 0); }
+    g.fillStyle = A.goldGrad(g, cx - colW * 0.4, 0, cx + colW * 0.4, 0); g.globalAlpha = 0.8;
+    g.fillRect(cx - colW * 0.38, bottom + b.h * 0.025, colW * 0.76, Math.max(1, b.h * 0.014)); g.globalAlpha = 1;
+    fitFont(g, item[1], fs, colW * 0.92);
+    g.textAlign = "center"; g.textBaseline = "middle"; g.fillStyle = item[0] === "mystery" && P.edge ? "#ffd6f6" : "#f2f7ff";
+    g.fillText(item[1], cx, b.y + b.h * 0.85);
+  }
+  /* Dải kệ 4 ngăn: khung kính viền neon mảnh, nhãn nhỏ trên đầu, mỗi ngăn 1 quà + vạch sáng + tên. */
   function drawShelf(g, W, H) {
     if (!shelfImgs) { return; }
     var P = pal(); var b = shelfBox(W, H); var colW = b.w / SHELF.length;
-    var fs = Math.max(9, Math.min(H * 0.03, colW * 0.13));
+    var fs = Math.max(9, Math.min(H * 0.026, colW * 0.12));
     g.save();
     g.imageSmoothingQuality = "high";
     shelfPanel(g, b, P);
-    SHELF.forEach(function (s, i) {
-      var cx = b.x + colW * (i + 0.5);
-      if (i) { g.fillStyle = rgba(P.line, 0.18); g.fillRect(Math.round(b.x + colW * i), b.y + b.h * 0.16, 1, b.h * 0.7); }
-      shelfItem(g, shelfImgs[s[0]], s[1], cx, b, colW, P, fs);
+    SHELF.forEach(function (item, i) {
+      if (i) { g.fillStyle = rgba(P.line, 0.16); g.fillRect(Math.round(b.x + colW * i), b.y + b.h * 0.18, 1, b.h * 0.64); }
+      shelfItem(g, item, b.x + colW * (i + 0.5), b, colW, P, fs);
     });
-    shelfHeader(g, b, P, Math.max(9, fs * 0.92));
+    shelfHeader(g, b, P, Math.max(8, fs * 0.82));
     g.restore();
   }
 
@@ -2424,6 +2532,135 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 })(window.LC = window.LC || {});
 </script>
 <script>
+/* Máy gắp · chế độ MacBook đặt ở quầy (Admin 21/11: chạy trên 1 MacBook riêng, không phải iPad).
+   Tự bật khi máy không có cảm ứng (con trỏ chuột chính xác + 0 điểm chạm) hoặc khi có ?kiosk=mac; ?kiosk=touch để ép tắt.
+   - root.is-desk: chữ hướng dẫn đổi sang chuột / bàn phím (".t-desk" thay ".t-tap": "Bấm chuột 1 lần để bật âm thanh"…);
+   - root.is-keys: đang ở MacBook mà CHƯA nối trạm núm (relay ws://127.0.0.1:8766) → gợi ý "← → để lái · Space để gắp";
+   - giữ màn hình sáng (navigator.wakeLock, xin lại khi trang hiện lại / mỗi lần bấm), ẩn con trỏ sau 3 giây (LC.promo.kiosk);
+   - Quản lý → Tổng quan → "Toàn màn hình" (chỉ nhân viên). Không tự xin toàn màn hình: Chrome --kiosk đã kín màn hình.
+   iPad (có cảm ứng) không bị ảnh hưởng. */
+(function (LC) {
+  "use strict";
+  var wake = { lock: null, pending: false };
+
+  function param() {
+    try { return new URLSearchParams(window.location.search).get("kiosk") || ""; } catch (e) { return ""; }
+  }
+  function detect() {
+    var p = param();
+    if (p === "mac") { return true; }
+    if (p === "touch" || p === "ipad") { return false; }
+    var fine = !!window.matchMedia && window.matchMedia("(pointer: fine)").matches;
+    var touch = (navigator.maxTouchPoints || 0) > 0 || "ontouchstart" in window;
+    return fine && !touch;
+  }
+  var on = detect();
+  function root() { return document.getElementById("cg"); }
+
+  /* ---------- giữ màn hình sáng ---------- */
+  function requestWake() {
+    if (!on || wake.lock || wake.pending || !("wakeLock" in navigator) || document.visibilityState !== "visible") { return; }
+    wake = { lock: null, pending: true };
+    try {
+      navigator.wakeLock.request("screen").then(function (lock) {
+        wake = { lock: lock, pending: false };
+        lock.addEventListener("release", function () { wake = { lock: null, pending: false }; });
+      }, function () { wake = { lock: null, pending: false }; });
+    } catch (e) { wake = { lock: null, pending: false }; }
+  }
+
+  /* ---------- toàn màn hình (nút trong Quản lý) ---------- */
+  function isFull() { return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+  function toggleFull() {
+    try {
+      if (isFull()) {
+        var exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (exit) { exit.call(document); }
+        return;
+      }
+      var el = document.documentElement;
+      var req = el.requestFullscreen || el.webkitRequestFullscreen;
+      var p = req ? req.call(el) : null;
+      if (p && p.catch) { p.catch(function () { return null; }); }
+    } catch (e) { root().classList.add("is-nofull"); }
+  }
+
+  /* is-keys: MacBook chưa nối trạm núm → hướng dẫn bằng phím. Gọi lại khi trạm đổi trạng thái. */
+  function syncKeys() {
+    var el = root();
+    if (!el) { return; }
+    el.classList.toggle("is-keys", on && LC.input.bridgeStatus().state !== "on");
+  }
+  function init() {
+    if (!on) { return; }
+    root().classList.add("is-desk");
+    syncKeys();
+    requestWake();
+    document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") { requestWake(); } });
+    document.addEventListener("pointerdown", requestWake, true);
+    document.addEventListener("keydown", requestWake, true);
+  }
+
+  LC.desk = { on: function () { return on; }, init: init, syncKeys: syncKeys, toggleFull: toggleFull, isFull: isFull,
+              awake: function () { return !!wake.lock; } };
+})(window.LC = window.LC || {});
+</script>
+<script>
+/* Máy gắp · tự hạ hiệu ứng phụ trên máy yếu (Admin 21/11: MacBook Pro 13" đời cũ ở quầy, có thể chip Intel, GPU tích hợp yếu).
+   Chế độ MacBook (src/desk.js): sau khi mở 1,5 giây, đo thời gian khung hình trong 3 giây; nếu đa số khung chậm hơn ~50 khung / giây
+   (trung vị > 20 ms và ≥ 60 % khung > 20 ms) thì bật root.is-lite: bỏ sương mờ trôi, bụi, lấp lánh, vạch quét, tia xoay, nhấp nháy neon,
+   pháo giấy còn một nửa. Cảnh chính (tủ, móc, túi, kệ quà, bảng LED, nút) giữ nguyên.
+   ?lite=1 ép bật (mọi máy) · ?lite=0 ép tắt. iPad: không tự đo (giữ nguyên như cũ). */
+(function (LC) {
+  "use strict";
+  var WARMUP_MS = 1500;
+  var SAMPLE_MS = 3000;
+  var SLOW_MS = 20;
+  var info = { lite: false, source: "", fps: 0, slowShare: 0, frames: 0 };
+
+  function param() {
+    try { return new URLSearchParams(window.location.search).get("lite"); } catch (e) { return null; }
+  }
+  var onChange = null;
+  function apply(on, source) {
+    var was = info.lite;
+    info = Object.assign({}, info, { lite: !!on, source: source });
+    var root = document.getElementById("cg");
+    if (root) { root.classList.toggle("is-lite", !!on); }
+    if (onChange && was !== !!on) { onChange(!!on); }
+  }
+  function median(list) {
+    var s = list.slice().sort(function (a, b) { return a - b; });
+    return s.length ? s[Math.floor(s.length / 2)] : 0;
+  }
+  /* 1 vòng đo duy nhất; trang bị ẩn giữa chừng thì bỏ kết quả (rAF ngừng chạy khi ẩn). */
+  function measure() {
+    var dts = []; var last = 0; var t0 = 0;
+    var step = function (ts) {
+      if (document.visibilityState !== "visible") { info = Object.assign({}, info, { source: "hidden" }); return; }
+      if (!t0) { t0 = ts; last = ts; window.requestAnimationFrame(step); return; }
+      dts.push(ts - last); last = ts;
+      if (ts - t0 < SAMPLE_MS) { window.requestAnimationFrame(step); return; }
+      var med = median(dts);
+      var slow = dts.filter(function (d) { return d > SLOW_MS; }).length / dts.length;
+      info = Object.assign({}, info, { fps: Math.round(1000 / Math.max(1, med)), slowShare: +slow.toFixed(2), frames: dts.length });
+      apply(med > SLOW_MS && slow >= 0.6, "measured");
+    };
+    window.setTimeout(function () { window.requestAnimationFrame(step); }, WARMUP_MS);
+  }
+  /* opts.onChange(lite): gọi khi bật / tắt bản nhẹ (app hạ độ phân giải canvas). */
+  function init(opts) {
+    onChange = (opts && opts.onChange) || null;
+    var p = param();
+    if (p === "1") { apply(true, "url"); return; }
+    if (p === "0") { apply(false, "url"); return; }
+    if (LC.desk && LC.desk.on()) { measure(); }
+  }
+
+  LC.perf = { init: init, lite: function () { return info.lite; }, info: function () { return info; } };
+})(window.LC = window.LC || {});
+</script>
+<script>
 /* Máy gắp · cảnh trong tủ kính: đống túi, xe + móc gắp, máng quà. Kết quả đã chốt trước khi chơi, nên lượt nào
    móc cũng giữ được túi; hồi hộp nằm ở chuyển động: móc lắc, túi tuột nhẹ, đung đưa rồi mới rơi vào máng.
    Hiệu năng (17/11, cho iPad đời cũ): 4 lớp canvas chồng nhau thay cho 1 canvas vẽ lại toàn bộ mỗi khung —
@@ -2490,6 +2727,32 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function unit(z) { return Math.min(S.W, S.H * 1.1) * 0.105 * scaleZ(z); }
   function chuteRect() { return S.chute; }
 
+  /* Kính rộng (MacBook, tủ ngang kín màn hình 21/11): thêm túi theo tỉ lệ rộng / cao để đống túi vẫn dày.
+     k = 1 (iPad ngang / dọc) → đúng đống túi cũ (makePile gốc). x0 = mép trái đống túi (sau máng quà). */
+  function pileFactor(W, H) { return Math.round(clamp(W / H / 1.45, 1, 2.6) * 4) / 4; }
+  function makeWidePile(k, x0) {
+    var rnd = seeded(2711);
+    var x1 = 0.95; var mid = (x0 + x1) / 2; var half = (x1 - x0) / 2 + 0.04;
+    var rows = [[0.02, 6], [0.2, 6], [0.38, 6], [0.56, 6], [0.74, 5], [0.9, 4]];
+    var bags = [];
+    var add = function (x, z, lift, rotK, s0) {
+      bags.push({ id: bags.length, x: clamp(x, x0 - 0.02, x1 + 0.01), z: z, lift: lift, rot: (rnd() - 0.5) * rotK,
+                  kind: Math.floor(rnd() * 6), s: s0 + rnd() * 0.16, hidden: false, drop: 0 });
+    };
+    rows.forEach(function (row, ri) {
+      var n = Math.round(row[1] * k);
+      for (var i = 0; i < n; i += 1) {
+        var x = lerp(x0, x1 - 0.03, i / (n - 1)) + (rnd() - 0.5) * 0.03 + (ri % 2 ? 0.02 : 0);
+        var mound = Math.max(0, 1 - Math.abs(x - mid) / half) * (1 - Math.abs(row[0] - 0.4) / 0.6);
+        add(x, row[0] + (rnd() - 0.5) * 0.05, Math.max(0, mound) * 0.07, 0.4, 0.9);
+      }
+    });
+    var tops = Math.round(7 * k);
+    for (var j = 0; j < tops; j += 1) {
+      add(lerp(x0 + 0.06, x1 - 0.06, (j + 0.5) / tops) + (rnd() - 0.5) * 0.03, [0.18, 0.45, 0.24, 0.6, 0.32, 0.52, 0.68][j % 7], 0.1 + rnd() * 0.04, 0.6, 0.94);
+    }
+    return bags.sort(function (a, b) { return a.z - b.z || a.lift - b.lift; });
+  }
   function makePile() {
     var rnd = seeded(2711);
     var rows = [[0.02, 6], [0.2, 6], [0.38, 6], [0.56, 6], [0.74, 5], [0.9, 4]];
@@ -2873,7 +3136,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var backdrop = art.makeBackdrop(W, H, S.dpr);
     var bg = backdrop.getContext("2d");
     bg.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
-    S.chute = { x: W * 0.025, y: H * 0.64, w: W * 0.22, h: H * 0.38 };
+    S.chute = { x: W * 0.025, y: H * 0.64, w: Math.min(W * 0.22, H * 0.5), h: H * 0.38 };
     art.chuteBack(bg, S.chute);
     S.base = backdrop;
     S.sprites = art.makeBags(Math.min(W, H * 1.1) * 0.15 * S.dpr);
@@ -2888,7 +3151,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var W = c.clientWidth; var H = c.clientHeight;
     if (!W || !H) { return; }
     /* Tủ to hơn (17/11): giới hạn điểm ảnh mỗi lớp canvas để iPad cũ vẫn 60 khung / giây. */
-    S.dpr = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(MAX_LAYER_PX / (W * H)));
+    S.dpr = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(S.maxPx / (W * H)));
+    usePile(pileFactor(W, H), (W * 0.025 + Math.min(W * 0.22, H * 0.5)) / W + 0.035);
     S.W = W; S.H = H;
     ["back", "mid", "front", "top"].forEach(function (k) { sizeLayer(S.ly[k], W, H); });
     buildSprites(W, H);
@@ -2911,6 +3175,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     c.parentNode.insertBefore(el, c);
     return makeLayer(el);
   }
+  /* Đổi đống túi khi tỉ lệ kính đổi hẳn (vd iPad ⇄ MacBook kính rộng); không đổi giữa lượt. */
+  function usePile(k, x0) {
+    if (k === S.pileK || S.seq || S.held || S.falling) { return; }
+    var pile = k <= 1 ? makePile() : makeWidePile(k, x0);
+    var ops = makeOps(pile);
+    S.pileK = k; S.pile = pile; S.ops = ops;
+    S.opIndex = ops.reduce(function (acc, op, i) { if (op.bag) { acc[op.bag.id] = i; } return acc; }, []);
+  }
   function init(c, opts) {
     var pile = makePile();
     var ops = makeOps(pile);
@@ -2920,7 +3192,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
           held: null, falling: null, slipPx: 0, chuteGlow: 0, input: { x: 0, z: 0 }, drag: null, kx: null, kv: 0,
           sw: { on: false, pass: null, dur: SWEEP.dur, hold: 0 }, seq: null, last: 0, lastX: 0, lastVx: 0,
           pile: pile, ops: ops, opIndex: opIndex, split: 0, sprites: [], W: 0, H: 0, dpr: 1, chute: { x: 0, y: 0, w: 0, h: 0 },
-          rigR: rect(), spotR: rect(), rigDirty: true, topDirty: true, sigNow: new Float64Array(SIG_N), sigLast: new Float64Array(SIG_N) };
+          rigR: rect(), spotR: rect(), rigDirty: true, topDirty: true, sigNow: new Float64Array(SIG_N), sigLast: new Float64Array(SIG_N),
+          pileK: 1, maxPx: MAX_LAYER_PX };
     S.ly = { back: underLayer(c, "back"), mid: underLayer(c, "mid"), front: underLayer(c, "front"), top: makeLayer(c) };
     S.setPhase = function (p) { S.phase = p; S.rigDirty = true; if (S.on.phase) { S.on.phase(p); } };
     resize();
@@ -2980,7 +3253,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   /* Đổi giao diện (LC.theme.set đã gọi): vẽ lại vách, túi, móc theo bảng màu mới; bỏ ảnh túi cũ của khay / túi to. */
   function restyle() { bagCache = {}; if (S) { resize(); } }
 
-  LC.scene = { init: init, resize: resize, restyle: restyle, startRound: startRound, grab: grab, reset: reset, setInput: setInput, setDrag: setDrag, knobStep: knobStep, setSweep: setSweep,
+  /* Trần điểm ảnh mỗi lớp canvas (MacBook / bản nhẹ: thấp hơn cho GPU Intel đời cũ). Gọi xong thì resize() để áp dụng. */
+  function setPixelBudget(px) { if (S) { S.maxPx = px > 0 ? px : MAX_LAYER_PX; } }
+
+  LC.scene = { init: init, resize: resize, restyle: restyle, setPixelBudget: setPixelBudget, chute: function () { return { x: S.chute.x, w: S.chute.w }; }, bagCount: function () { return S.pile.length; }, startRound: startRound, grab: grab, reset: reset, setInput: setInput, setDrag: setDrag, knobStep: knobStep, setSweep: setSweep,
                sweeping: function () { return S.sw.on && S.phase === "play" && S.sw.hold <= 0; },
                bagImage: bagImage, phase: function () { return S.phase; }, pos: function () { return { x: S.cx, z: S.cz }; } };
 })(window.LC = window.LC || {});
@@ -3191,7 +3467,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var set = CONFETTI[LC.theme.current()] || CONFETTI.bf;
     var colors = (big ? set.big : [main].concat(set.small.slice(0, 3), [main], set.small.slice(3)))
       .map(function (c) { return colorIndex(q, c); });
-    var count = Math.min(big ? 200 : 130, CF_MAX - q.n);
+    var count = Math.min(Math.round((big ? 200 : 130) * (LC.perf.lite() ? 0.5 : 1)), CF_MAX - q.n);
     var cannons = big ? [[w * 0.03, h * 0.98, 1], [w * 0.97, h * 0.98, -1], [w / 2, h * 0.4, 0]] : [[w / 2, h * 0.42, 0]];
     if (count <= 0 || q.bursts.length >= q.alpha.length) { return; }
     var burst = q.bursts.length;
@@ -3298,7 +3574,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     setAdmin({ open: false, pendingMode: mode });
     var content = mode === "content";
     showLayer(pinHtml("Chuyển sang " + (content ? "Content" : "Sự kiện"),
-      (content ? "Quay video: tỉ lệ quà tự nhiên (hub hiếm), không trừ kho, lịch sử riêng; " + CFG.contentIdleMin + " phút không ai chạm thì tự về Sự kiện." : "Cho khách chơi thật: trừ kho, tính suất quà.") + " Nhập mã PIN để chuyển.",
+      (content ? "Quay video: tỉ lệ quà tự nhiên (hub hiếm), không trừ kho, lịch sử riêng; " + CFG.contentIdleMin + " phút không ai dùng máy thì tự về Sự kiện." : "Cho khách chơi thật: trừ kho, tính suất quà.") + " Nhập mã PIN để chuyển.",
       "Chuyển", message));
   }
   function tryPin() {
@@ -3348,7 +3624,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       "<div class=\"cg-row\"><button class=\"cg-btn is-soft\" type=\"button\" data-act=\"undo\">" + (admin.undoArmed ? "Bấm lần nữa để hoàn tác" : "Hoàn tác lượt cuối") + "</button>" +
       "<button class=\"cg-btn is-red\" type=\"button\" data-act=\"resetall\">" + (admin.resetArmed ? "Bấm lần nữa: xóa hết lượt chơi, trả quà về kho" : "Bắt đầu lại") + "</button>" +
       "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mute\">" + (s.muted ? "Bật âm thanh" : "Tắt âm thanh") + "</button>" +
-      "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mode\">Đổi sang " + (content ? "Sự kiện" : "Content") + "</button></div>";
+      "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mode\">Đổi sang " + (content ? "Sự kiện" : "Content") + "</button>" +
+      (LC.desk.on() ? "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"fullscreen\">" + (LC.desk.isFull() ? "Thoát toàn màn hình" : "Toàn màn hình") + "</button>" : "") + "</div>";
   }
   /* "Khách thứ n / 50" + quà đặc biệt còn phải ra (Σ min(suất còn, hàng còn)) + báo máy khóa khi hết quà. */
   function windowHtml(s) {
@@ -3489,6 +3766,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
   /* Chỉ đổi chấm + chữ trạng thái (không dựng lại tab: nhân viên có thể đang gõ IP). */
   function onBridgeState(state) {
+    LC.desk.syncKeys();
     var dot = $("cgBridgeState"); var text = $("cgBridgeText");
     if (!dot || !text) { return; }
     dot.className = "cg-dot is-" + state; dot.setAttribute("data-state", state);
@@ -3614,6 +3892,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       persist(U.assign(st(), { spins: [], ledger: st().ledger.filter(function (e) { return e.kind !== "trao" && e.kind !== "hoantac"; }) }));
     },
     mute: function () { LC.app.setMuted(!st().muted); },
+    fullscreen: function () { LC.desk.toggleFull(); },
     mode: function () { persist(U.assign(st(), { mode: st().mode === "content" ? "event" : "content" })); },
     csvspins: function () { download("may-gap-black-friday_luot-gap_" + LC.app.today() + ".csv", csvSpins()); },
     csvstock: function () { download("may-gap-black-friday_lich-su-kho_" + LC.app.today() + ".csv", csvStock()); }
@@ -3685,7 +3964,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 
   /* ---------- kiosk ---------- */
   var CURSOR_MS = 3000;
-  function kiosk() {
+  /* opts.autoFull = false: không tự xin toàn màn hình (MacBook chạy Chrome --kiosk, nhân viên bật trong Quản lý). */
+  function kiosk(opts) {
     var root = document.getElementById("cg");
     var hideTimer = 0;
     root.classList.add("is-kiosk");
@@ -3714,6 +3994,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
         if (p && p.catch) { p.catch(function () { return null; }); }
       } catch (e) { root.classList.add("is-nofull"); }
     };
+    if (opts && opts.autoFull === false) { return; }
     document.addEventListener("pointerdown", full, true);
     document.addEventListener("keydown", full, true);
   }
@@ -3787,7 +4068,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     return true;
   }
   /* Ảnh logo lc cho túi "tag" + ảnh 4 quà đặc biệt cho kệ trưng bày trên vách: nạp xong hết thì vẽ lại cảnh 1 lần. */
-  var SHELF_SRC = { hub: "hub_vang", non: "non_hyper", tuida: "tuida", wipe: "wipe" };
+  var SHELF_SRC = { yoyo_pink: "yoyo_pink", yoyo_orange: "yoyo_orange", yoyo_lemon: "yoyo_lemon", mockhoa: "mockhoa", non: "non_hyper" };
   function loadArt() {
     var keys = Object.keys(SHELF_SRC);
     var imgs = {}; var left = keys.length + 1;
@@ -3810,29 +4091,58 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
 
   /* ---------- bố cục: 1 tủ đứng giữa, cao gần hết ô sân khấu; --u = bề ngang tủ / 100 ---------- */
+  /* MacBook ngang (Admin 21/11: "sao ko cho trò này full màn luôn, đi máy tính mà"): tủ NGANG kín màn hình (is-wide) — kính rộng
+     nhiều túi hơn, bảng hiệu / bàn điều khiển / bảng LED trải hết bề ngang; --u tính theo chiều cao để chữ, nút giữ đúng cỡ.
+     iPad (cảm ứng) giữ nguyên tủ đứng giữa. */
+  var WIDE_U = 112;
+  /* Tủ ngang (Admin 21/11: "full xong cái logo bỏ vào trong khung luôn"): logo lc + "Quà trong máy" + âm thanh vào 2 góc bảng hiệu;
+     huy hiệu D100H, dòng "Bấm chuột…", cảnh báo nhân viên vào bàn điều khiển. Không còn gì nằm ngoài tủ. Về tủ đứng thì trả lại chỗ cũ.
+     Chỉ dời phần tử (sự kiện gắn sẵn vẫn giữ: chạm 5 lần logo = Quản lý, giữ 2 giây = Content). */
+  function placeChrome(wide) {
+    var head = document.querySelector(".cg-head"); var crown = document.querySelector(".cg-crown");
+    var brand = $("cgBrand"); var tools = document.querySelector(".cg-tools");
+    var top = wide ? crown : head;
+    if (brand.parentNode !== top) { top.insertBefore(brand, top.firstChild); }
+    if (tools.parentNode !== top) { top.appendChild(tools); }
+    if ($("cgBadge").parentNode !== (wide ? $("cgStatus") : head)) { (wide ? $("cgStatus") : head).appendChild($("cgBadge")); }
+    [$("cgUnlock"), $("cgWarn")].forEach(function (el) {
+      var to = wide ? $("cgStatus") : root;
+      if (el.parentNode !== to) { to.appendChild(el); }
+    });
+  }
   function layout() {
     var slot = $("cgSlot"); var cab = $("cgCab");
     var portrait = window.innerHeight > window.innerWidth;
+    var wide = LC.desk.on() && !portrait && window.innerWidth / window.innerHeight > 1.2;
+    root.classList.toggle("is-wide", wide);
+    placeChrome(wide);
     var sh = slot.clientHeight; var sw = slot.clientWidth;
-    var w = Math.max(280, Math.min(sw, sh * (portrait ? 0.74 : 0.9)));
-    var h = Math.max(360, Math.min(sh, w * 1.62));
+    var w = wide ? sw : Math.max(280, Math.min(sw, sh * (portrait ? 0.74 : (LC.desk.on() ? 0.95 : 0.9))));
+    var h = wide ? sh : Math.max(360, Math.min(sh, w * 1.62));
+    var u = wide ? Math.min(w / 100, h / WIDE_U) : w / 100;
     cab.style.width = Math.round(w) + "px";
     cab.style.height = Math.round(h) + "px";
-    root.style.setProperty("--u", (w / 100).toFixed(3) + "px");
+    root.style.setProperty("--u", u.toFixed(3) + "px");
     root.style.setProperty("--cw", Math.round(w) + "px");
     LC.scene.resize();
+    /* Tủ ngang: cửa LẤY QUÀ ở đế thẳng hàng với máng QUÀ trong kính (cùng x, cùng bề rộng). */
+    var ch = LC.scene.chute();
+    root.style.setProperty("--chx", Math.round(ch.x) + "px");
+    root.style.setProperty("--chw", Math.round(ch.w) + "px");
     buildLed();
   }
 
   /* ---------- màn hình chính ---------- */
+  /* Bảng "Quà trong máy" cho khách (Admin 21/11: "ẩn mấy cái đặc biệt đi, hiện yoyo, móc khóa, nón thôi"): túi YOYO · móc khóa · nón
+     + 1 ô "Quà bí ẩn"; không tên / ảnh hub, túi da, khăn, Giảm 10%, quà thêm. Quản lý và thẻ quà sau khi gắp vẫn hiện quà thật. */
+  var SHOWN_PRIZES = ["yoyo", "mockhoa", "non"];
   function prizeListHtml() {
-    var keys = ["hub", "non", "tuida", "wipe", "giam10", "yoyo", "mockhoa"].concat(E.shownCustom(state).map(function (c) { return c.id; }));
-    return keys.map(function (k) {
+    return SHOWN_PRIZES.map(function (k) {
       var p = E.prizeOf(k, state);
-      var vid = k === "hub" ? "vang" : (k === "yoyo" ? "pink" : "");
-      return "<li class=\"" + (k === "hub" ? "is-top" : "") + "\"><span class=\"cg-pt\">" + R.artHtml(k, vid, state) + "</span>" +
+      return "<li><span class=\"cg-pt\">" + R.artHtml(k, k === "yoyo" ? "pink" : "", state) + "</span>" +
         "<span class=\"cg-pn\"><small>" + R.esc(p.tier) + "</small><b>" + R.esc(p.short) + "</b></span></li>";
-    }).join("");
+    }).join("") + "<li class=\"is-mystery\"><span class=\"cg-pt\"><span class=\"cg-q\" aria-hidden=\"true\">?</span></span>" +
+      "<span class=\"cg-pn\"><small>Giải đặc biệt</small><b>Quà bí ẩn</b></span></li>";
   }
   function warnText() {
     if (ui.saveError) { return "Không lưu được trên máy này · tắt duyệt riêng tư của Safari"; }
@@ -3847,6 +4157,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
   function render() {
     applyTheme();
+    LC.desk.syncKeys();
     var lock = blocked() && !ui.recId;
     root.classList.toggle("is-blocked", lock);
     $("cgBlocked").hidden = !lock;
@@ -4115,6 +4426,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 
   var wakeLock = null;
   function keepAwake() {
+    if (LC.desk.on()) { return; }
     try {
       if (!("wakeLock" in navigator) || wakeLock) { return; }
       navigator.wakeLock.request("screen").then(function (l) { wakeLock = l; l.addEventListener("release", function () { wakeLock = null; }); })
@@ -4130,7 +4442,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     window.setInterval(function () { if (!contentIdleCheck(Date.now()) && !busy() && !LC.admin.isOpen()) { render(); } }, 60000);
     LC.promo.init({ idleFor: idleFor, idleMs: ATTRACT_SEC * 1000, showMs: 10000, hideMs: 8000, tickMs: DEBUG ? 250 : 1000,
                     onShow: function () { if (!state.muted) { LC.music.attract(); } } });
-    if (KIOSK) { LC.promo.kiosk(); }
+    if (KIOSK) { LC.promo.kiosk(); } else if (LC.desk.on()) { LC.promo.kiosk({ autoFull: false }); }
+    LC.desk.init();
+    /* MacBook: trần điểm ảnh canvas thấp hơn iPad (GPU Intel Iris đời 2016); bản nhẹ còn thấp hơn nữa. */
+    var budget = function (lite) { return lite ? 0.85e6 : 1.3e6; };
+    if (LC.desk.on()) { LC.scene.setPixelBudget(budget(false)); }
+    LC.perf.init({ onChange: function (lite) { if (LC.desk.on() || lite) { LC.scene.setPixelBudget(budget(lite)); layout(); } } });
     $("cgPrizeBtn").addEventListener("click", openPrizes);
     $("cgPrizeLayer").addEventListener("click", closePrizes);
     $("cgStart").addEventListener("click", startRound);
@@ -4180,6 +4497,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     window.__lc = { CFG: CFG, E: E, getState: function () { return state; }, phase: function () { return root.getAttribute("data-phase"); }, isDemo: isDemo, claw: LC.scene.pos,
                     audio: LC.audio.stats, dial: LC.input.isDial, promo: LC.promo.visible, bridge: LC.input.bridgeStatus,
                     mode: LC.input.mode, media: LC.media.state, sweeping: LC.scene.sweeping, theme: themeInfo, blocked: blocked,
+                    desk: LC.desk.on, awake: LC.desk.awake, perf: LC.perf.info, bags: LC.scene.bagCount,
                     idleCheck: function (minutes) { return contentIdleCheck(ui.lastTouch + minutes * 60000); } };
   }
 })(window.LC = window.LC || {});
