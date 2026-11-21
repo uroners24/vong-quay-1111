@@ -841,9 +841,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     return rec.prize === "yoyo" && YOYO_GLOW[colour] ? YOYO_GLOW[colour] : lookOf(rec.prize).glow;
   }
 
-  /* ---------- lưu trữ trên iPad (giữ key cũ; bản lưu cũ thiếu theme → "auto", thiếu plan / quota vẫn mở được) ---------- */
+  /* ---------- lưu trữ trên iPad (giữ key cũ; bản lưu cũ thiếu theme / "auto" → "alt" (luân phiên), thiếu plan / quota vẫn mở được) ---------- */
   function seedState() {
-    return { version: 1, spins: [], ledger: [], extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "auto" };
+    return { version: 1, spins: [], ledger: [], extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "alt" };
   }
   function loadState() {
     try {
@@ -856,7 +856,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
                quota: s.quota && typeof s.quota === "object" ? s.quota : {},
                plan: s.plan && typeof s.plan === "object" ? s.plan : {},
                muted: !!s.muted, mode: s.mode === "content" ? "content" : "event",
-               theme: s.theme === "bf" || s.theme === "cyber" ? s.theme : "auto" };
+               theme: s.theme === "bf" || s.theme === "cyber" ? s.theme : "alt" };
     } catch (e) { return seedState(); }
   }
   function saveState(s) {
@@ -1060,8 +1060,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 /* Máy gắp · giao diện.
    Admin 20/11 chốt ("cái này đẹp nè"): CHỈ dùng CYBER WEEKEND cho cả chương trình (giới thiệu 24–25/11 + sự kiện 26–30/11, Admin 21/11):
    navy / tím, ống neon cyan + hồng, bảng LED chấm chạy chữ đếm ngày tới Cyber Monday 30.11, sàn lưới; 30/11 bảng hiệu đổi CYBER MONDAY.
-   Không còn tự đổi theo ngày, không còn chọn giao diện trong Quản lý (state.theme cũ bị bỏ qua). Giao diện BLACK FRIDAY (vàng – đen)
-   giữ lại chỉ để xem / dùng sau qua ?theme=bf.
+   21/11 Admin: "quên thêm 1 bản Black Friday nữa, cho phép lựa luân phiên 2 cái" → Quản lý → Giao diện: Cyber / Black Friday / Luân phiên
+   (mặc định Luân phiên: từng khách đổi qua lại, không đổi giữa lượt). ?theme=cyber|bf vẫn ép được (để xem / quay).
    Chữ có dấu: font BVP Black (Be Vietnam Pro Black); font LW Display chỉ cho chữ không dấu (BLACK FRIDAY, CYBER, số). */
 (function (LC) {
   "use strict";
@@ -1069,8 +1069,19 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   var MONDAY = "2026-11-30";
 
   function norm(v) { return NAMES.indexOf(v) >= 0 ? v : ""; }
-  /* Luôn Cyber; chỉ đường dẫn ?theme=bf mới mở lại Black Friday. day / saved giữ trong chữ ký cho rõ là cố ý bỏ qua. */
-  function resolve(day, saved, param) { return norm(param) || "cyber"; }
+  /* Cách chọn (Quản lý → Giao diện, Admin 21/11): "cyber" | "bf" | "alt" = luân phiên Cyber ⇄ Black Friday theo từng khách
+     (lượt thứ chẵn Cyber, lẻ Black Friday; đếm theo số lượt đã ghi). Chưa chọn / giá trị lạ → "alt". Đường dẫn ?theme=… luôn thắng.
+     hold = giao diện đang hiện: đang giữa 1 lượt chơi / đang trao quà thì KHÔNG đổi (luân phiên chỉ đổi khi máy rảnh). */
+  var MODES = ["cyber", "bf", "alt"];
+  function normMode(v) { return MODES.indexOf(v) >= 0 ? v : "alt"; }
+  function resolve(day, saved, param, plays, hold) {
+    var p = norm(param);
+    if (p) { return p; }
+    var mode = normMode(saved);
+    if (mode !== "alt") { return mode; }
+    if (hold && norm(hold)) { return hold; }
+    return (Number(plays) || 0) % 2 === 0 ? "cyber" : "bf";
+  }
   function dayNum(day) { var p = String(day).split("-"); return Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) / 86400000; }
   function daysTo(day, target) { return Math.round(dayNum(target) - dayNum(day)); }
 
@@ -1103,7 +1114,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   };
   var current = "cyber";
 
-  LC.theme = { NAMES: NAMES, MONDAY: MONDAY, norm: norm, resolve: resolve, daysTo: daysTo, countdown: countdown, copy: copy,
+  LC.theme = { NAMES: NAMES, MODES: MODES, normMode: normMode, MONDAY: MONDAY, norm: norm, resolve: resolve, daysTo: daysTo, countdown: countdown, copy: copy,
                current: function () { return current; },
                set: function (name) { current = norm(name) || "cyber"; return current; },
                pal: function () { return PAL[current]; } };
@@ -3828,7 +3839,19 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       "<button class=\"cg-btn is-red\" type=\"button\" data-act=\"resetall\">" + (admin.resetArmed ? "Bấm lần nữa: xóa hết lượt chơi, trả quà về kho" : "Bắt đầu lại") + "</button>" +
       "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mute\">" + (s.muted ? "Bật âm thanh" : "Tắt âm thanh") + "</button>" +
       "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mode\">Đổi sang " + (content ? "Sự kiện" : "Content") + "</button>" +
-      (LC.desk.on() ? "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"fullscreen\">" + (LC.desk.isFull() ? "Thoát toàn màn hình" : "Toàn màn hình") + "</button>" : "") + "</div>";
+      (LC.desk.on() ? "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"fullscreen\">" + (LC.desk.isFull() ? "Thoát toàn màn hình" : "Toàn màn hình") + "</button>" : "") + "</div>" + themeHtml(s);
+  }
+  /* Giao diện máy (Admin 21/11): Cyber / Black Friday / Luân phiên từng khách (chỉ đổi khi máy rảnh). */
+  var THEME_LABEL = { cyber: "Cyber Weekend", bf: "Black Friday", alt: "Luân phiên" };
+  function themeHtml(s) {
+    var cur = LC.theme.normMode(s.theme);
+    var info = LC.app.themeInfo();
+    var btn = function (k) {
+      return "<button class=\"cg-btn" + (cur === k ? "" : " is-soft") + "\" type=\"button\" data-act=\"theme\" data-k=\"" + k + "\"" + (cur === k ? " aria-pressed=\"true\"" : "") + ">" + THEME_LABEL[k] + "</button>";
+    };
+    return "<h3>Giao diện máy</h3><p id=\"cgThemeNow\" data-mode=\"" + cur + "\">Đang chọn: <b>" + THEME_LABEL[cur] + "</b> · đang hiện: <b>" + THEME_LABEL[info.name] + "</b>" +
+      (info.param ? " (đường dẫn ép ?theme=" + esc(info.param) + ")" : "") + ". Luân phiên: khách này Cyber, khách sau Black Friday, rồi lặp lại; chỉ đổi khi máy rảnh.</p>" +
+      "<div class=\"cg-row\">" + ["alt", "cyber", "bf"].map(btn).join("") + "</div>";
   }
   /* "Khách thứ n / 50" + quà đặc biệt còn phải ra (Σ min(suất còn, hàng còn)) + báo máy khóa khi hết quà. */
   function windowHtml(s) {
@@ -4097,6 +4120,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     mute: function () { LC.app.setMuted(!st().muted); },
     fullscreen: function () { LC.desk.toggleFull(); },
     mode: function () { persist(U.assign(st(), { mode: st().mode === "content" ? "event" : "content" })); },
+    theme: function (b, parts) { persist(U.assign(st(), { theme: LC.theme.normMode(parts[0]) })); },
     csvspins: function () { download("may-gap-black-friday_luot-gap_" + LC.app.today() + ".csv", csvSpins()); },
     csvstock: function () { download("may-gap-black-friday_lich-su-kho_" + LC.app.today() + ".csv", csvStock()); }
   };
@@ -4215,7 +4239,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
    "Quà trong máy" mở bảng gọn. Máy rảnh ~20 giây: giới thiệu D100H (src/promo.js).
    Vòng 3: 2 chế độ (src/input.js) — "sweep" = móc tự quét, nhấn núm đúng lúc để gắp (iPad, núm qua phím media src/media.js);
    "knob" = xoay núm lái móc. root[data-mode] đổi gợi ý trên bàn điều khiển.
-   20/11: root[data-theme] = "cyber" cho cả chương trình (src/theme.js; "bf" chỉ qua ?theme=bf); hết quà (engine.canPlay) → khóa máy,
+   20/11 → 21/11: root[data-theme] = cyber | bf theo Quản lý → Giao diện (Cyber / Black Friday / Luân phiên từng khách; src/theme.js; ?theme= ép được); hết quà (engine.canPlay) → khóa máy,
    màn hình "Hết quà" cho nhân viên tới khi nhập thêm kho. */
 (function (LC) {
   "use strict";
@@ -4256,7 +4280,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
   function applyTheme() {
     var day = today();
-    var name = LC.theme.resolve(day, state.theme, THEME_PARAM);
+    var name = LC.theme.resolve(day, state.theme, THEME_PARAM, state.spins.length, busy() ? LC.theme.current() : "");
     var c = LC.theme.copy(name, day);
     var key = name + "|" + c.hero + "|" + c.date + "|" + c.ticker.map(function (x) { return x.t; }).join("");
     if (key === themeKey) { return false; }
@@ -4727,7 +4751,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   LC.app = { state: function () { return state; }, persist: persist, render: render, today: today, isDemo: isDemo, isTest: isTest, setMuted: setMuted, themeInfo: themeInfo,
              fast: function () { return FAST; }, reduced: function () { return REDUCED; } };
 
-  LC.theme.set(LC.theme.resolve(today(), state.theme, THEME_PARAM));
+  LC.theme.set(LC.theme.resolve(today(), state.theme, THEME_PARAM, state.spins.length, ""));
   buildBulbs();
   buildDust();
   loadArt();
