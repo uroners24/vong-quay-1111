@@ -436,6 +436,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg.is-keys .t-keys{display:inline!important}
 .cg.is-keys .t-knob,.cg.is-keys .cg-ctrl .t-sweep,.cg.is-keys .cg-ctrl .t-dial,.cg.is-keys .cg-ctrl .t-touch,.cg.is-keys .cg-hint .t-touch,.cg.is-keys .cg-hint .t-dial{display:none!important}
 .cg.is-desk .cg-slot{bottom:max(30px,env(safe-area-inset-bottom))}
+/* MacBook không chuột: gợi ý từng bước bằng núm / Space (src/app.js press) */
+.t-deskhint,.cg-keyhint{display:none}
+.cg.is-desk .cg-hint span{display:none!important}
+.cg.is-desk .cg-hint .t-deskhint{display:inline!important}
+.cg.is-desk .cg-keyhint{display:block;margin:12px 0 0;padding:8px 14px;border-radius:999px;font-family:var(--fv);font-weight:900;font-size:15px;color:var(--g0);
+  background:rgba(var(--acr),.12);border:1px solid rgba(var(--acr),.5)}
 /* Tủ ngang kín màn hình (MacBook): chừa hàng trên cho logo + "Quà trong máy", mái đèn thấp hơn (đã trải ngang). */
 .cg.is-wide{--crown:14.5;--hero:5.8}
 .cg.is-wide .cg-slot{top:max(8px,env(safe-area-inset-top));bottom:max(8px,env(safe-area-inset-bottom));left:max(8px,env(safe-area-inset-left));right:max(8px,env(safe-area-inset-right))}
@@ -446,16 +452,36 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg-crown>.cg-tools{position:absolute;z-index:3;right:calc(var(--u) * 5);top:50%;transform:translateY(-50%);margin:0}
 /* bàn điều khiển ngang: chữ hướng dẫn trái · đồng hồ giữa · trạng thái (huy hiệu D100H, "Bấm chuột…", cảnh báo) phải */
 .cg-status{display:none}
-/* Bàn điều khiển ngang (Admin 21/11 "hơi mất cân đối"): 1 cụm cân đối ở giữa — [D100H][hướng dẫn] [ĐỒNG HỒ] [trạng thái][GẮP!],
-   2 bên rộng bằng nhau nên đồng hồ đúng tâm tủ, không còn khoảng trống lớn. */
-.cg.is-wide .cg-deck{grid-template-columns:auto auto auto;justify-content:center;column-gap:calc(var(--u) * 3)}
-.cg.is-wide .cg-dial{width:calc(var(--u) * var(--deck) * .9)}
-.cg.is-wide .cg-panel{flex-direction:row;justify-content:center;align-items:center;gap:calc(var(--u) * 3.5);padding:0}
-.cg.is-wide .cg-ctrl{order:1;flex:0 0 calc(var(--u) * 40);min-width:0;align-items:flex-start;text-align:left}
-.cg.is-wide .cg-timer{order:2;flex:none}
-.cg.is-wide .cg-status{order:3;flex:0 0 calc(var(--u) * 40);min-width:0;display:flex;flex-direction:column;align-items:flex-end;gap:calc(var(--u) * .7)}
-/* Đế ngang: cửa LẤY QUÀ đúng dưới máng QUÀ (--chx / --chw từ src/scene.js), bảng LED lấp phần còn lại, khe xu sát mép phải như bàn điều khiển. */
-.cg.is-wide .cg-base{grid-template-columns:var(--chw,28%) minmax(0,1fr) calc(var(--u) * 7);padding-left:var(--chx,0)}
+/* Tủ ngang MacBook (src/app.js layout): bảng hiệu trên · [cột trái | KÍNH ≤ 1,55 : 1 | cột phải] · đế (LẤY QUÀ + LED) dưới.
+   Bàn điều khiển cũ ẩn: núm D100H + hướng dẫn + trạng thái sang cột trái, đồng hồ + GẮP! sang cột phải (src/app.js placeChrome). */
+.cg-side{display:none}
+.cg.is-wide .cg-cab{grid-template-columns:minmax(0,1fr) var(--glassw,60%) minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;column-gap:calc(var(--u) * 2.4)}
+.cg.is-wide .cg-crown{grid-column:1 / -1;grid-row:1}
+.cg.is-wide .cg-glass{grid-column:2;grid-row:2}
+.cg.is-wide .cg-deck{display:none}
+.cg.is-wide .cg-base{grid-column:2;grid-row:3;grid-template-columns:var(--chw,28%) minmax(0,1fr) calc(var(--u) * 7);padding-left:var(--chx,0)}
+.cg.is-wide .cg-side{grid-row:2 / span 2;margin-top:calc(var(--u) * 1.4);display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:calc(var(--u) * 1.4);
+  min-width:0;padding:calc(var(--u) * 1.6) calc(var(--u) * 1.2);border-radius:calc(var(--u) * 2);text-align:center;
+  background:linear-gradient(180deg,#28272d,#141417 55%,#0e0e11);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 0 1px rgba(var(--acr),.45),inset 0 0 calc(var(--u) * 2) rgba(0,0,0,.5)}
+.cg.is-wide .cg-side-l{grid-column:1}
+.cg.is-wide .cg-side-r{grid-column:3}
+.cg.is-wide .cg-side .cg-dial{width:calc(var(--u) * 15);height:calc(var(--u) * 15);flex:none}
+.cg.is-wide .cg-side .cg-d100{height:calc(var(--u) * 14)}
+.cg.is-wide .cg-side .cg-ctrl{align-items:center;text-align:center;gap:calc(var(--u) * .6)}
+.cg.is-wide .cg-side .cg-ctrl b{font-size:calc(var(--u) * 1.7)}
+.cg.is-wide .cg-side .cg-status{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u) * .7);min-height:calc(var(--u) * 3)}
+.cg.is-wide .cg-side .cg-timer{flex-direction:column;align-items:center;gap:calc(var(--u) * .3);padding:calc(var(--u) * .8) calc(var(--u) * 1.6);max-width:100%}
+.cg.is-wide .cg-side .cg-timer span{font-size:calc(var(--u) * 5.6);min-width:0;text-align:center}
+.cg.is-wide .cg-side .cg-go{width:min(calc(var(--u) * 15),100%);height:auto;aspect-ratio:1 / 1;flex:none}
+.cg.is-wide .cg-side .cg-grab{font-size:calc(var(--u) * 3.4)}
+.cg.is-wide .cg-unlock{white-space:normal;text-align:center}
+.cg.is-wide .cg-side .cg-badge{display:none}
+/* nút BẮT ĐẦU + 2 dòng dưới theo cỡ kính (không theo cả màn hình) để vẫn thấy đống túi */
+.cg.is-wide .cg-start{gap:calc(var(--u) * 1.4)}
+.cg.is-wide .cg .cg-startbtn,.cg.is-wide .cg-startbtn{font-size:calc(var(--u) * 4.8);padding:calc(var(--u) * 2) calc(var(--u) * 7) calc(var(--u) * 2.2)!important}
+.cg.is-wide .cg-start small{font-size:calc(var(--u) * 2)}
+.cg.is-wide .cg-dialhint{font-size:calc(var(--u) * 2.3)}
+.cg.is-wide .cg-dialhint .cg-knob{width:calc(var(--u) * 4.6);height:calc(var(--u) * 4.6)}
 .cg-status>.cg-badge,.cg-status>.cg-unlock,.cg-status>.cg-warn{position:static;left:auto;right:auto;bottom:auto;transform:none;margin:0}
 .cg-status>.cg-badge{transition:opacity .35s}
 .cg.is-wide .cg-timer span{font-size:calc(var(--u) * 6.2)}
@@ -626,6 +652,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg[data-theme=cyber].is-wide .cg-promo{background:radial-gradient(55% 80% at 30% 50%,rgba(95,243,255,.16),transparent 70%),radial-gradient(70% 90% at 50% 45%,rgba(16,8,44,.86),rgba(4,4,16,.66))}
 .cg[data-theme=cyber].is-wide .cg-promo-photo{filter:drop-shadow(0 calc(var(--u) * 2) calc(var(--u) * 3) rgba(0,0,0,.75)) drop-shadow(0 0 calc(var(--u) * 3) rgba(95,243,255,.35))}
 .cg[data-theme=cyber].is-wide .cg-qr img{box-shadow:0 0 0 calc(var(--u) * .4) rgba(var(--mgr),.7),0 0 calc(var(--u) * 3) rgba(var(--mgr),.45)}
+
+/* tủ ngang: 2 cột neon 2 bên kính (cùng chất liệu bàn điều khiển cũ) */
+.cg[data-theme=cyber].is-wide .cg-side{background:linear-gradient(180deg,#23264f,#111232 55%,#0a0b22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1.5px rgba(95,243,255,.55),0 0 calc(var(--u) * 1.4) rgba(95,243,255,.25),inset 0 0 calc(var(--u) * 2) rgba(0,0,0,.5)}
+.cg[data-theme=cyber].is-wide .cg-side-r{box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 0 0 1.5px rgba(var(--mgr),.6),0 0 calc(var(--u) * 1.4) rgba(var(--mgr),.25),inset 0 0 calc(var(--u) * 2) rgba(0,0,0,.5)}
+
+/* quà đặc biệt: túi to mở ra từ túi sáng → quầng neon nhấp nháy sau túi */
+.cg-openbag.is-special::after{content:"";position:absolute;z-index:-1;inset:-14%;border-radius:40%;pointer-events:none;
+  background:radial-gradient(closest-side,rgba(255,255,255,.35),rgba(var(--acr),.45) 35%,rgba(var(--mgr,var(--acr)),.22) 60%,transparent 76%);animation:cgGlowO 1.1s ease-in-out infinite;opacity:.55}
 </style>
 </head>
 <body>
@@ -656,6 +691,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 <figure class="cg-qr"><img id="cgQr" src="data:image/webp;base64,UklGRhABAABXRUJQVlA4TAMBAAAvN8FNAA/wiP9L/L/if/7jAXDbSBLkVP5J0+i9h8wB5ET0fwL6T+39Uooi77tov1BptZeBhBKJSDiRkqDUqVQqyoWshJAkaQ/jPUk/vc/imyiN9NeHIFuDpCh7GURUWj9EDqNQUZFSkfR5ElKhkoIkuIsiz1ShSqHDIKS1SUqJu0jlnUqlDN2GKFUS5dVhqCJESYmonEWFFJRQinAXpEQqJRREZ5FS6dFks5eh0kJUenUYngVNUaJ1FwmlPCQZ6TL0VKXV2svIppfWs3IW37IJSiWH4d0qks3oLlpRlEhU3AYmRamSZ7kQSVAo5UCoqJJn6fMkVsFHlOI03hEqCFK5i3/SAA==" width="312" height="312" alt="Mã QR trang sản phẩm Ulanzi Dial D100H" draggable="false"><figcaption>Quét mã xem sản phẩm</figcaption></figure>
 </div><p class="cg-promo-cta"><svg class="cg-knob" viewBox="0 0 64 64" aria-hidden="true"><path class="cg-knob-arr" d="M8.5 33A24 24 0 0 1 19 13.5M8.5 33l-3.2-5.6M8.5 33l5.4-3.4"/><path class="cg-knob-arr" d="M55.5 33A24 24 0 0 0 45 13.5M55.5 33l3.2-5.6M55.5 33l-5.4-3.4"/><circle class="cg-knob-base" cx="32" cy="36" r="17"/><circle class="cg-knob-cap" cx="32" cy="36" r="12.5"/><path class="cg-knob-dot" d="M32 26.5v5"/></svg><span class="t-knob">Nhấn núm · chơi thử ngay</span><span class="t-keys">Bấm Space · chơi thử ngay</span></p></div>
 </div>
+<div class="cg-side cg-side-l" id="cgSideL"></div><div class="cg-side cg-side-r" id="cgSideR"></div>
 <div class="cg-deck">
 <div class="cg-dial" id="cgDial"><svg class="cg-d100" viewBox="0 0 120 124" aria-hidden="true"><defs><linearGradient id="cgD100Body" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#45454c"/><stop offset=".5" stop-color="#2c2c32"/><stop offset="1" stop-color="#1b1b1f"/></linearGradient><radialGradient id="cgD100Cap" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#5a5a62"/><stop offset=".55" stop-color="#2f2f35"/><stop offset="1" stop-color="#18181c"/></radialGradient></defs><rect class="d-side" x="2" y="40" width="7" height="20" rx="2.5"/><rect class="d-side" x="2" y="64" width="7" height="20" rx="2.5"/><rect class="d-side" x="111" y="40" width="7" height="20" rx="2.5"/><rect class="d-side" x="111" y="64" width="7" height="20" rx="2.5"/><rect x="7" y="6" width="106" height="114" rx="16" fill="url(#cgD100Body)" stroke="#55555d" stroke-width="1.2"/><path class="d-top" d="M15 9h90a6 6 0 0 1 6 6v14H9V15a6 6 0 0 1 6-6z"/><path class="d-gap" d="M43 9v20M77 9v20M9 29h102"/><rect class="d-notch" x="54" y="13" width="12" height="2.4" rx="1.2"/><circle class="d-led" cx="92" cy="40" r="2.6"/><g class="cg-d100-knob"><circle cx="60" cy="76" r="33" fill="#141417"/><circle class="d-knurl" cx="60" cy="76" r="31"/><circle cx="60" cy="76" r="27" fill="url(#cgD100Cap)" stroke="#5c5c64" stroke-width="1"/><circle class="d-dimple" cx="60" cy="58" r="4.2"/></g><path class="d-arr l" d="M22 100a40 40 0 0 1-4-34M22 100l-6.5-.6M22 100l1.4-6.4"/><path class="d-arr r" d="M98 100a40 40 0 0 0 4-34M98 100l6.5-.6M98 100l-1.4-6.4"/></svg><button class="cg-kb k-left" type="button" data-step="-1" aria-label="Móc sang trái" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg></button><button class="cg-kb k-right" type="button" data-step="1" aria-label="Móc sang phải" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg></button></div>
 <div class="cg-panel">
@@ -674,8 +710,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 </section>
 </main>
 <p class="cg-warn" id="cgWarn" hidden></p>
-<p class="cg-unlock" id="cgUnlock"><span class="t-tap">Chạm màn hình 1 lần để bật núm</span><span class="t-desk">Bấm chuột 1 lần để bật âm thanh</span></p>
-<div class="cg-layer cg-open" id="cgOpen" hidden><div class="cg-openbag" id="cgOpenBag"><span class="cg-half h-l"><canvas></canvas></span><span class="cg-half h-r"><canvas></canvas></span><span class="cg-flash"></span></div><p class="cg-hint" id="cgHint"><span class="t-touch">CHẠM VÀO TÚI ĐỂ XÉ</span><span class="t-dial">NHẤN NÚM ĐỂ XÉ TÚI</span><span class="t-keys">BẤM SPACE ĐỂ XÉ TÚI</span></p></div>
+<p class="cg-unlock" id="cgUnlock"><span class="t-tap">Chạm màn hình 1 lần để bật núm</span><span class="t-desk">Nhấn Space 1 lần để bật âm thanh</span></p>
+<div class="cg-layer cg-open" id="cgOpen" hidden><div class="cg-openbag" id="cgOpenBag"><span class="cg-half h-l"><canvas></canvas></span><span class="cg-half h-r"><canvas></canvas></span><span class="cg-flash"></span></div><p class="cg-hint" id="cgHint"><span class="t-touch">CHẠM VÀO TÚI ĐỂ XÉ</span><span class="t-dial">NHẤN NÚM ĐỂ XÉ TÚI</span><span class="t-keys">BẤM SPACE ĐỂ XÉ TÚI</span><span class="t-deskhint">NHẤN NÚM / SPACE ĐỂ XÉ TÚI</span></p></div>
 <div class="cg-layer cg-result" id="cgResult" hidden><div class="cg-rays"></div><div class="cg-card" id="cgCard"></div></div>
 <div class="cg-layer cg-prizelayer" id="cgPrizeLayer" hidden><div class="cg-prizebox"><h2>Quà trong máy</h2><ul class="cg-prizes" id="cgPrizes"></ul><p class="cg-prizes-more">Túi nào cũng có quà · và các phần quà đặc biệt bí ẩn</p><p><span class="t-tap">Chạm bất kỳ đâu để đóng</span><span class="t-desk">Bấm bất kỳ đâu để đóng</span></p></div></div>
 <div class="cg-layer cg-adminlayer" id="cgAdminLayer" hidden><div class="cg-admin" id="cgAdmin"></div></div>
@@ -1683,6 +1719,95 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
 
   LC.art = Object.assign({}, LC.art, { makeBackdrop: makeBackdrop, chuteBack: chuteBack, chuteFront: chuteFront, setShelf: setShelf, SHELF: SHELF });
+})(window.LC = window.LC || {});
+</script>
+<script>
+/* Máy gắp · túi phát sáng (Admin 21/11): "trong đống túi quà sẽ có vài túi phát sáng ngẫu nhiên, nhưng khi gắp tới sẽ trúng túi thường,
+   chỉ khi trúng phần quà đặc biệt thì mới trúng túi sáng".
+   - Luôn có 3–5 túi sáng (viền neon + ánh màu, nhịp thở), đổi ngẫu nhiên mỗi 8–15 giây, mờ dần / hiện dần. Hết quà đặc biệt → tắt hết.
+   - Bộ chia quà (src/engine.js) chốt quà TRƯỚC lúc móc hạ; móc chỉ "diễn" theo kết quả (pickFor):
+       quà đặc biệt → nhấc túi sáng gần nhất trong tầm với (không có thì túi được nhấc tự sáng lên);
+       quà thường   → nhấc túi thường; móc rơi trúng túi sáng thì túi sáng tuột khỏi móc, móc bắt túi thường sát bên.
+   - Vẽ rẻ: sprite ánh sáng vẽ sẵn 1 lần mỗi kiểu túi (shadowBlur chỉ lúc tạo), mỗi khung chỉ drawImage + globalAlpha; nhịp đổi túi chạy
+     theo vòng lặp khung hình của cảnh (không setInterval → không rò timer). */
+(function (LC) {
+  "use strict";
+  var COUNT = [3, 5];
+  var EVERY = [8000, 15000];
+  var FADE_S = 0.7;
+  var REACH = 0.045;
+  var G = { on: false, ids: {}, next: 0, rnd: Math.random };
+
+  function rand(a, b) { return a + G.rnd() * (b - a); }
+  function dist(b, x, z) { return Math.pow(b.x - x, 2) + Math.pow((b.z - z) * 0.7, 2) - b.lift * 0.02; }
+  function nearest(list, x, z) {
+    return list.reduce(function (best, b) { return !best || dist(b, x, z) < dist(best, x, z) ? b : best; }, null);
+  }
+  function free(pile) { return pile.filter(function (b) { return !b.hidden && b.drop <= 0; }); }
+  /* Đang sáng (kể cả đang hiện dần / chưa tắt hẳn): quà thường không bao giờ nhấc túi này. */
+  function isGlowing(b) { var e = G.ids[b.id]; return !!e && (e.want || e.a > 0.05); }
+
+  /* Chọn bộ túi sáng mới: ưu tiên túi nửa trước đống (z ≥ 0.3) cho dễ thấy, khác bộ cũ nếu được. */
+  function rotate(pile) {
+    var pool = free(pile).filter(function (b) { return b.z >= 0.3 && !G.ids[b.id]; });
+    var n = Math.round(rand(COUNT[0], COUNT[1] + 0.49));
+    var pick = pool.map(function (b) { return { b: b, k: G.rnd() }; }).sort(function (a, c) { return a.k - c.k; }).slice(0, n);
+    Object.keys(G.ids).forEach(function (id) { G.ids[id].want = false; });
+    pick.forEach(function (p) { G.ids[p.b.id] = { a: 0, want: true }; });
+  }
+  /* Mỗi khung: hiện / mờ dần; tới giờ thì đổi bộ (không đổi khi móc đang gắp / đang giữ túi). */
+  function tick(dt, ts, pile, busy) {
+    if (G.on && !busy && ts >= G.next) { rotate(pile); G.next = ts + rand(EVERY[0], EVERY[1]); }
+    Object.keys(G.ids).forEach(function (id) {
+      var e = G.ids[id];
+      e.a = Math.max(0, Math.min(1, e.a + (e.want ? dt : -dt) / FADE_S));
+      if (!e.want && e.a <= 0) { delete G.ids[id]; }
+    });
+  }
+  function setOn(on) {
+    if (G.on === !!on) { return; }
+    G.on = !!on;
+    if (!G.on) { Object.keys(G.ids).forEach(function (id) { G.ids[id].want = false; }); } else { G.next = 0; }
+  }
+  /* special = quà đặc biệt (do engine chốt). Trả về { target, decoy, lightUp }: decoy = túi sáng móc chạm trước rồi tuột. */
+  function pickFor(special, pile, x, z) {
+    var bags = free(pile);
+    var near = nearest(bags, x, z);
+    if (!near) { return { target: null, decoy: null, lightUp: false }; }
+    if (special) {
+      var g = nearest(bags.filter(isGlowing), x, z);
+      return g && dist(g, x, z) - dist(near, x, z) <= REACH ? { target: g, decoy: null, lightUp: false } : { target: near, decoy: null, lightUp: true };
+    }
+    if (!isGlowing(near)) { return { target: near, decoy: null, lightUp: false }; }
+    var plain = nearest(bags.filter(function (b) { return !isGlowing(b); }), near.x, near.z);
+    return { target: plain || near, decoy: plain ? near : null, lightUp: false };
+  }
+  /* Túi được nhấc khỏi đống: bỏ khỏi bộ sáng (túi đang giữ vẽ ánh sáng riêng nếu là quà đặc biệt). */
+  function release(bag) { delete G.ids[bag.id]; }
+  function list() { return Object.keys(G.ids).map(function (id) { return { id: Number(id), a: G.ids[id].a }; }); }
+
+  /* Sprite ánh sáng cho 1 kiểu túi: quầng neon quanh viền (đục bỏ phần túi) + ánh màu phủ nhẹ lên túi. */
+  function makeSprite(sp, halo, tint) {
+    var pad = Math.round(sp.bw * 0.28);
+    var c = LC.art.canvas(sp.c.width + pad * 2, sp.c.height + pad * 2);
+    var g = c.getContext("2d");
+    g.shadowColor = halo; g.shadowBlur = pad * 0.9;
+    for (var i = 0; i < 2; i += 1) { g.drawImage(sp.c, pad, pad); }
+    g.shadowBlur = 0; g.globalCompositeOperation = "destination-out"; g.drawImage(sp.c, pad, pad);
+    var t = LC.art.canvas(sp.c.width, sp.c.height); var tg = t.getContext("2d");
+    tg.drawImage(sp.c, 0, 0); tg.globalCompositeOperation = "source-in"; tg.fillStyle = tint; tg.fillRect(0, 0, t.width, t.height);
+    g.globalCompositeOperation = "source-over"; g.globalAlpha = 0.32; g.drawImage(t, pad, pad);
+    return { c: c, ox: sp.ox + pad, oy: sp.oy + pad, top: sp.top + pad };
+  }
+  function makeSprites(sprites) {
+    var P = LC.theme.pal();
+    return sprites.map(function (sp, i) { return makeSprite(sp, P.edge ? (i % 2 ? "#ff4fd8" : "#5ff3ff") : P.acc[1], P.edge ? "#9ff8ff" : P.acc[0]); });
+  }
+  /* Độ sáng hiện tại của 1 mục (hiện dần × nhịp thở). */
+  function alphaOf(e, id, ts) { return e.a * (0.72 + 0.28 * Math.sin(ts / 420 + id * 1.7)); }
+
+  LC.glow = { tick: tick, setOn: setOn, on: function () { return G.on; }, pickFor: pickFor, isGlowing: isGlowing, release: release, list: list,
+              makeSprites: makeSprites, alphaOf: alphaOf, entries: function () { return G.ids; } };
 })(window.LC = window.LC || {});
 </script>
 <script>
@@ -2890,8 +3015,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var k = scaleZ(S.cz) * S.held.s / S.dpr;
     var tipY = p.hy + p.u * 0.62 + S.slipPx;
     var tipX = p.hx + Math.sin(S.swing) * (p.u * 0.62 + S.slipPx);
+    if (S.heldGlow) { drawSprite(g, glowSpriteOf(S.held), tipX, tipY, k, S.swing + S.bagSwing, true); }
     drawSprite(g, sp, tipX, tipY, k, S.swing + S.bagSwing, true);
-    var r = Math.sqrt(sp.c.width * sp.c.width + sp.c.height * sp.c.height) * k + 2;
+    var r = Math.sqrt(sp.c.width * sp.c.width + sp.c.height * sp.c.height) * k * (S.heldGlow ? 1.4 : 1) + 2;
     rectAdd(R, tipX - r, tipY - r, 2 * r, 2 * r);
   }
   function drawClawSprite(g, x, y, u, open, angle) {
@@ -2942,6 +3068,24 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
 
   /* ---------- lớp top: túi đang rơi + mặt kính máng quà ---------- */
+  /* ---------- lớp glow: ánh sáng các túi sáng (src/glow.js), vẽ lại mỗi khung chỉ vùng có túi sáng ---------- */
+  function glowSpriteOf(bag) { return S.glowSprites[bag.kind % S.glowSprites.length]; }
+  function paintGlow(ts) {
+    var L = S.ly.glow; var ents = LC.glow.entries(); var ids = Object.keys(ents);
+    if (!ids.length && !S.glowR.on) { return; }
+    clearRect(L, S.glowR);
+    var g = L.g; g.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
+    ids.forEach(function (id) {
+      var op = S.ops[S.opIndex[id]]; var bag = op && op.bag;
+      if (!bag || bag.hidden) { return; }
+      var b = bagBase(bag); var k = bagScale(bag); var sp = glowSpriteOf(bag);
+      g.globalAlpha = LC.glow.alphaOf(ents[id], Number(id), ts);
+      drawSprite(g, sp, b.x, b.y, k, bag.rot, false);
+      var r = Math.max(sp.c.width, sp.c.height) * k + 4;
+      rectAdd(S.glowR, b.x - r, b.y - r * 1.2, 2 * r, 2.2 * r);
+    });
+    g.globalAlpha = 1;
+  }
   function paintTop() {
     var active = !!S.falling || S.chuteGlow > 0;
     if (!active && !S.topDirty) { return; }
@@ -2950,6 +3094,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     g.clearRect(0, 0, S.ly.top.c.width, S.ly.top.c.height);
     g.setTransform(S.dpr, 0, 0, S.dpr, 0, 0);
     var f = S.falling;
+    if (f && f.glow) { drawSprite(g, glowSpriteOf(f.bag), f.x, f.y, f.k, f.rot, true); }
     if (f) { drawSprite(g, spriteOf(f.bag), f.x, f.y, f.k, f.rot, true); }
     art.chuteFront(g, chuteRect(), S.chuteGlow);
     S.topDirty = active;
@@ -3075,20 +3220,36 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     });
     return best;
   }
-  function grabSteps(target) {
+  /* Móc rơi trúng túi sáng mà kết quả là quà thường: kẹp hờ, túi sáng tuột (lắc + tiếng tuột), móc trượt sang túi thường sát bên. */
+  function slipOffSteps(decoy, target, depthOf) {
+    var fromX = 0; var fromZ = 0; var fromL = 0;
+    return [
+      { d: 420, start: function () { S.setPhase("grab"); window.setTimeout(function () { LC.audio.clunk(); }, 220 * S.speed); },
+        step: function (k) { S.open = lerp(1, 0.42, easeOut(k)); } },
+      { d: 380, start: function () { LC.audio.slip(); S.shake = 0.16; S.setPhase("slip"); S.lastLift = Object.assign({}, S.lastLift, { slipped: decoy.id }); },
+        step: function (k) { S.open = lerp(0.42, 1, k); S.L = depthOf(decoy) - Math.sin(k * Math.PI) * unit(S.cz) * 0.35; } },
+      { d: 520, start: function () { fromX = S.cx; fromZ = S.cz; fromL = S.L; LC.audio.motorOn(0.6); },
+        step: function (k) { var e = ease(k); S.cx = lerp(fromX, target.x, e); S.cz = lerp(fromZ, target.z + 0.001, e); S.L = lerp(fromL, depthOf(target), e); },
+        end: function () { LC.audio.motorOff(); } }
+    ];
+  }
+  function grabSteps(target, decoy, glowing) {
     var L0 = S.L;
-    var depth = function () { return Math.max(L0 + 20, bagTopY(target) - railY(S.cz) - unit(S.cz) * 0.62); };
+    var depthOf = function (b) { return Math.max(L0 + 20, bagTopY(b) - railY(S.cz) - unit(S.cz) * 0.62); };
+    var depth = function () { return depthOf(target); };
+    var first = decoy || target;
     var mid = function () { return lerp(L0, depth(), 0.45); };
     var fromX = 0; var fromZ = 0;
     var secondSlip = S.rnd() < 0.55;
     return [
       { d: 380, start: function () { LC.audio.motorOff(); LC.audio.release(); S.setPhase("drop"); }, step: function (k) { S.open = ease(k); } },
       { d: 1350, start: function () { fromX = S.cx; fromZ = S.cz; LC.audio.motorOn(0.75); LC.audio.whoosh(); },
-        step: function (k) { var e = ease(k); S.cx = lerp(fromX, target.x, e); S.cz = lerp(fromZ, target.z + 0.001, e); S.L = lerp(L0, depth(), e); } },
-      { d: 260, start: function () { LC.audio.motorOff(); }, step: function (k) { S.L = depth() + Math.sin(k * Math.PI) * 6; } },
+        step: function (k) { var e = ease(k); S.cx = lerp(fromX, first.x, e); S.cz = lerp(fromZ, first.z + 0.001, e); S.L = lerp(L0, depthOf(first), e); } },
+      { d: 260, start: function () { LC.audio.motorOff(); }, step: function (k) { S.L = depthOf(first) + Math.sin(k * Math.PI) * 6; } }
+    ].concat(decoy ? slipOffSteps(decoy, target, depthOf) : [], [
       { d: 480, start: function () { S.setPhase("grab"); window.setTimeout(function () { LC.audio.clunk(); LC.audio.squeeze(); }, 300 * S.speed); },
         step: function (k) { S.open = lerp(1, 0.16, easeOut(k)); },
-        end: function () { S.held = target; target.hidden = true; markBag(target); S.slipPx = 0; S.shake = 0.06; } },
+        end: function () { S.held = target; S.heldGlow = !!glowing; LC.glow.release(target); target.hidden = true; markBag(target); S.slipPx = 0; S.shake = 0.06; } },
       { d: 300 },
       { d: 0, start: function () { LC.audio.roll(2.5 * S.speed); } },
       tween(820, function () { return S.L; }, mid, function (v) { S.L = v; }),
@@ -3106,15 +3267,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       { d: 300, start: function () { LC.audio.release(); S.setPhase("release"); dropHeld(); }, step: function (k) { S.open = lerp(0.26, 1, easeOut(k)); } },
       { d: 200, until: function () { return !S.falling; } },
       { d: 420, step: function (k) { S.open = lerp(1, 0, ease(k)); } }
-    ];
+    ]);
   }
   function dropHeld() {
     var p = clawPos();
     var bag = S.held;
     var r = chuteRect();
     S.falling = { bag: bag, x: p.hx, y: p.hy + p.u * 0.62 + S.slipPx, vy: 0, tx: r.x + r.w / 2, rot: S.swing + S.bagSwing, vr: (S.rnd() - 0.5) * 1.2,
-                  k: scaleZ(S.cz) * bag.s / S.dpr };
-    S.held = null; S.slipPx = 0; S.bagSwing = 0; S.vBagSwing = 0;
+                  k: scaleZ(S.cz) * bag.s / S.dpr, glow: S.heldGlow };
+    S.held = null; S.heldGlow = false; S.slipPx = 0; S.bagSwing = 0; S.vBagSwing = 0;
     S.chuteGlow = 1;
     window.setTimeout(LC.audio.drop, 120 * S.speed);
   }
@@ -3126,9 +3287,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var moving = moveByInput(dt);
     if (S.phase === "play") { if (moving) { LC.audio.motorOn(1); } else { LC.audio.motorOff(); } }
     stepSeq(dt);
+    LC.glow.tick(dt, ts, S.pile, !!S.seq || !!S.held || !!S.falling);
     if (S.phase === "idle" && !S.seq) { S.L = S.L0 + Math.sin(ts / 700) * 3; }
     physics(dt);
     draw();
+    paintGlow(ts);
     window.requestAnimationFrame(frame);
   }
   function sizeLayer(L, W, H) { L.c.width = Math.round(W * S.dpr); L.c.height = Math.round(H * S.dpr); L.dirty.on = false; }
@@ -3140,6 +3303,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     art.chuteBack(bg, S.chute);
     S.base = backdrop;
     S.sprites = art.makeBags(Math.min(W, H * 1.1) * 0.15 * S.dpr);
+    S.glowSprites = LC.glow.makeSprites(S.sprites);
     var uRef = unit(1) * S.dpr;
     S.claw = art.makeClawSprites(uRef, CLAW_STEPS);
     S.carriage = art.makeCarriage(uRef);
@@ -3154,7 +3318,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     S.dpr = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(S.maxPx / (W * H)));
     usePile(pileFactor(W, H), (W * 0.025 + Math.min(W * 0.22, H * 0.5)) / W + 0.035);
     S.W = W; S.H = H;
-    ["back", "mid", "front", "top"].forEach(function (k) { sizeLayer(S.ly[k], W, H); });
+    ["back", "mid", "front", "glow", "top"].forEach(function (k) { sizeLayer(S.ly[k], W, H); });
+    S.glowR.on = false;
     buildSprites(W, H);
     S.L0 = H * 0.12;
     if (!S.seq) { S.L = S.L0; }
@@ -3193,8 +3358,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
           sw: { on: false, pass: null, dur: SWEEP.dur, hold: 0 }, seq: null, last: 0, lastX: 0, lastVx: 0,
           pile: pile, ops: ops, opIndex: opIndex, split: 0, sprites: [], W: 0, H: 0, dpr: 1, chute: { x: 0, y: 0, w: 0, h: 0 },
           rigR: rect(), spotR: rect(), rigDirty: true, topDirty: true, sigNow: new Float64Array(SIG_N), sigLast: new Float64Array(SIG_N),
-          pileK: 1, maxPx: MAX_LAYER_PX };
-    S.ly = { back: underLayer(c, "back"), mid: underLayer(c, "mid"), front: underLayer(c, "front"), top: makeLayer(c) };
+          pileK: 1, maxPx: MAX_LAYER_PX, glowR: rect(), glowSprites: [], heldGlow: false, lastLift: null };
+    S.ly = { back: underLayer(c, "back"), mid: underLayer(c, "mid"), front: underLayer(c, "front"), glow: underLayer(c, "glow"), top: makeLayer(c) };
     S.setPhase = function (p) { S.phase = p; S.rigDirty = true; if (S.on.phase) { S.on.phase(p); } };
     resize();
     window.requestAnimationFrame(frame);
@@ -3209,11 +3374,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     if (S.sw.on === !!on) { return; }
     S.sw.on = !!on; S.sw.pass = null; S.sw.hold = 0;
   }
-  function grab() {
+  /* special = engine đã chốt quà đặc biệt cho lượt này (trước lúc móc hạ): nhấc túi sáng; quà thường: nhấc túi thường (túi sáng thì tuột). */
+  function grab(special) {
     if (S.phase !== "play") { return false; }
     S.input = { x: 0, z: 0 }; S.drag = null; S.kx = null; S.kv = 0;
-    var target = pickTarget();
-    runSeq(grabSteps(target), function () { S.setPhase("delivered"); });
+    var pick = LC.glow.pickFor(!!special, S.pile, S.cx, S.cz);
+    var target = pick.target || pickTarget();
+    var glowing = !!special;
+    S.lastLift = { bag: target.id, glowing: glowing, wasGlowing: LC.glow.isGlowing(target), decoy: pick.decoy ? pick.decoy.id : null, slipped: null, lightUp: pick.lightUp };
+    runSeq(grabSteps(target, pick.decoy, glowing), function () { S.setPhase("delivered"); });
     return true;
   }
   /* Về lại chờ: túi vừa gắp được thay bằng túi mới rơi từ trên xuống. */
@@ -3221,7 +3390,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     S.pile.forEach(function (b) {
       if (b.hidden) { b.hidden = false; b.kind = Math.floor(Math.random() * 6); b.drop = 1; markBag(b); }
     });
-    S.seq = null; S.held = null; S.falling = null; S.open = 0; S.slipPx = 0; S.topDirty = true;
+    S.seq = null; S.held = null; S.heldGlow = false; S.falling = null; S.open = 0; S.slipPx = 0; S.topDirty = true;
     LC.audio.motorOff();
     S.setPhase("idle");
   }
@@ -3256,7 +3425,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   /* Trần điểm ảnh mỗi lớp canvas (MacBook / bản nhẹ: thấp hơn cho GPU Intel đời cũ). Gọi xong thì resize() để áp dụng. */
   function setPixelBudget(px) { if (S) { S.maxPx = px > 0 ? px : MAX_LAYER_PX; } }
 
-  LC.scene = { init: init, resize: resize, restyle: restyle, setPixelBudget: setPixelBudget, chute: function () { return { x: S.chute.x, w: S.chute.w }; }, bagCount: function () { return S.pile.length; }, startRound: startRound, grab: grab, reset: reset, setInput: setInput, setDrag: setDrag, knobStep: knobStep, setSweep: setSweep,
+  LC.scene = { init: init, resize: resize, restyle: restyle, setPixelBudget: setPixelBudget, setGlow: function (on) { LC.glow.setOn(on); },
+               lastLift: function () { return S.lastLift; }, pickFor: function (special, x, z) { var p = LC.glow.pickFor(special, S.pile, x, z);
+                 return { target: p.target && p.target.id, targetGlowing: !!p.target && LC.glow.isGlowing(p.target), decoy: p.decoy && p.decoy.id, lightUp: p.lightUp }; },
+               bagAt: function (id) { var op = S.ops[S.opIndex[id]]; return op && op.bag ? { x: op.bag.x, z: op.bag.z } : null; }, chute: function () { return { x: S.chute.x, w: S.chute.w }; }, bagCount: function () { return S.pile.length; }, startRound: startRound, grab: grab, reset: reset, setInput: setInput, setDrag: setDrag, knobStep: knobStep, setSweep: setSweep,
                sweeping: function () { return S.sw.on && S.phase === "play" && S.sw.hold <= 0; },
                bagImage: bagImage, phase: function () { return S.phase; }, pos: function () { return { x: S.cx, z: S.cz }; } };
 })(window.LC = window.LC || {});
@@ -3389,6 +3561,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       "<div class=\"cg-name\">" + esc(p.name) + "</div><p class=\"cg-note\">" + noteOf(rec, p, s) + "</p>" + pickHtml(rec, s, pick) +
       "<button class=\"cg-done\" type=\"button\" data-act=\"done\"" + (picking && !pick ? " disabled" : "") + ">Đã trao quà · lượt tiếp theo</button>" +
       (picking ? "<p class=\"cg-staff\">Nhân viên chọn đúng màu thật đã trao rồi bấm xác nhận</p>" : "") +
+      "<p class=\"cg-keyhint\" id=\"cgKeyHint\">" + (picking ? "← → đổi màu · nhấn núm / Space để xác nhận" : "Trao quà xong · nhấn núm / Space để về") + "</p>" +
       "<p class=\"cg-plug\">Thích núm này? <b>Ulanzi Dial D100H</b> có tại quầy</p>";
     $("cgResult").hidden = false;
   }
@@ -4094,12 +4267,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   /* MacBook ngang (Admin 21/11: "sao ko cho trò này full màn luôn, đi máy tính mà"): tủ NGANG kín màn hình (is-wide) — kính rộng
      nhiều túi hơn, bảng hiệu / bàn điều khiển / bảng LED trải hết bề ngang; --u tính theo chiều cao để chữ, nút giữ đúng cỡ.
      iPad (cảm ứng) giữ nguyên tủ đứng giữa. */
-  var WIDE_U = 112;
-  /* Tủ ngang (Admin 21/11: "full xong cái logo bỏ vào trong khung luôn"): logo lc + "Quà trong máy" + âm thanh vào 2 góc bảng hiệu;
-     huy hiệu D100H, dòng "Bấm chuột…", cảnh báo nhân viên vào bàn điều khiển. Không còn gì nằm ngoài tủ. Về tủ đứng thì trả lại chỗ cũ.
-     Chỉ dời phần tử (sự kiện gắn sẵn vẫn giữ: chạm 5 lần logo = Quản lý, giữ 2 giây = Content). */
+  /* Tủ ngang MacBook (Admin 21/11, ảnh máy thật 1280×~720 trên Safari: "trông nó hơi kì… cứ sao sao á"): kính KHÔNG kéo dài quá 1,55 : 1
+     (đúng tỉ lệ iPad → móc, túi, nút to đúng cỡ); bề ngang dư thành 2 cột neon của tủ: trái = núm D100H + hướng dẫn + trạng thái,
+     phải = đồng hồ + nút GẮP!. Bảng hiệu trên cùng, cửa LẤY QUÀ + bảng LED dưới cùng. --u theo chiều cao. */
+  var WIDE_U = 90;
+  var GLASS_MAX = 1.55;
+  var WIDE_ROWS = 27.7;   /* mái 14,5u + đế 9,4u + khoảng cách 3,8u */
+  var SIDE_MIN = 17;
   function placeChrome(wide) {
     var head = document.querySelector(".cg-head"); var crown = document.querySelector(".cg-crown");
+    var deck = document.querySelector(".cg-deck"); var panel = document.querySelector(".cg-panel");
     var brand = $("cgBrand"); var tools = document.querySelector(".cg-tools");
     var top = wide ? crown : head;
     if (brand.parentNode !== top) { top.insertBefore(brand, top.firstChild); }
@@ -4109,6 +4286,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       var to = wide ? $("cgStatus") : root;
       if (el.parentNode !== to) { to.appendChild(el); }
     });
+    var moves = wide ? [[$("cgDial"), $("cgSideL")], [document.querySelector(".cg-ctrl"), $("cgSideL")], [$("cgStatus"), $("cgSideL")],
+                        [$("cgTimer"), $("cgSideR")], [document.querySelector(".cg-go"), $("cgSideR")]]
+                     : [[$("cgDial"), deck], [$("cgTimer"), panel], [document.querySelector(".cg-ctrl"), panel], [$("cgStatus"), panel], [document.querySelector(".cg-go"), deck]];
+    if (moves[0][0].parentNode === moves[0][1] && moves[3][0].parentNode === moves[3][1]) { return; }
+    moves.forEach(function (m) { m[1].appendChild(m[0]); });
+    if (!wide) { deck.insertBefore($("cgDial"), deck.firstChild); }
   }
   function layout() {
     var slot = $("cgSlot"); var cab = $("cgCab");
@@ -4119,15 +4302,21 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var sh = slot.clientHeight; var sw = slot.clientWidth;
     var w = wide ? sw : Math.max(280, Math.min(sw, sh * (portrait ? 0.74 : (LC.desk.on() ? 0.95 : 0.9))));
     var h = wide ? sh : Math.max(360, Math.min(sh, w * 1.62));
-    var u = wide ? Math.min(w / 100, h / WIDE_U) : w / 100;
+    var u = wide ? Math.min(w / 130, h / WIDE_U) : w / 100;
+    if (wide) {
+      var glassH = h - WIDE_ROWS * u;
+      var room = w - u * (6.8 + 2 * SIDE_MIN + 4.8);
+      root.style.setProperty("--glassw", Math.round(Math.min(room, glassH * GLASS_MAX)) + "px");
+    }
     cab.style.width = Math.round(w) + "px";
     cab.style.height = Math.round(h) + "px";
     root.style.setProperty("--u", u.toFixed(3) + "px");
     root.style.setProperty("--cw", Math.round(w) + "px");
     LC.scene.resize();
-    /* Tủ ngang: cửa LẤY QUÀ ở đế thẳng hàng với máng QUÀ trong kính (cùng x, cùng bề rộng). */
+    /* Cửa LẤY QUÀ ở đế thẳng hàng với máng QUÀ trong kính (cùng x, cùng bề rộng). */
     var ch = LC.scene.chute();
-    root.style.setProperty("--chx", Math.round(ch.x) + "px");
+    var gl = $("cgGlass").getBoundingClientRect(); var bs = document.querySelector(".cg-base").getBoundingClientRect();
+    root.style.setProperty("--chx", Math.round(gl.left - bs.left + ch.x) + "px");
     root.style.setProperty("--chw", Math.round(ch.w) + "px");
     buildLed();
   }
@@ -4158,6 +4347,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function render() {
     applyTheme();
     LC.desk.syncKeys();
+    /* Túi sáng chỉ hiện khi lượt sau còn có thể ra quà đặc biệt (demo / Content: luôn có; sự kiện: còn suất + còn hàng trong 50 khách đầu). */
+    LC.scene.setGlow(isTest() || E.specialsLeft(state) > 0);
     var lock = blocked() && !ui.recId;
     root.classList.toggle("is-blocked", lock);
     $("cgBlocked").hidden = !lock;
@@ -4209,6 +4400,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     LC.audio.start();
     LC.music.start(FAST ? 0 : 0.9);
     LC.scene.startRound();
+    markStep();
     setControls(true);
     showTime(seconds());
     window.clearInterval(ui.timer);
@@ -4219,8 +4411,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     window.clearInterval(ui.timer);
     if (root.getAttribute("data-phase") !== "play") { return; }
     setControls(false);
-    LC.scene.grab();
+    LC.scene.grab(isSpecial(findRec(ui.recId)));
   }
+  /* Quà đặc biệt (không phải túi YOYO / móc khóa) → móc nhấc túi sáng (src/glow.js). Engine đã chốt quà lúc BẮT ĐẦU. */
+  function isSpecial(rec) { return !!rec && !E.isFiller(rec.prize); }
   function delivered(kind) {
     R.trayShow(kind);
     ui = U.assign(ui, { bagKind: kind });
@@ -4229,6 +4423,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function openBag() {
     if (!$("cgOpen").hidden || !ui.recId || !$("cgResult").hidden) { return; }
     R.openBag(ui.bagKind || 0, torn, FAST ? 30 : 9000);
+    $("cgOpenBag").classList.toggle("is-special", isSpecial(findRec(ui.recId)));
+    markStep();
   }
   function torn() {
     var rec = findRec(ui.recId);
@@ -4239,7 +4435,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     LC.audio.fanfare(big);
     ui = U.assign(ui, { pick: E.defaultPick(rec, state) });
     R.renderCard(rec, state, ui.pick);
+    markStep();
     R.celebrate(big, E.glowOf(rec));
+    if (isSpecial(rec) && !big && !FAST && !REDUCED) { window.setTimeout(function () { R.celebrate(false, E.glowOf(rec)); }, 350); }
     if (big && !FAST && !REDUCED) { window.setTimeout(function () { R.celebrate(true, E.glowOf(rec)); }, 1400); }
   }
   function finish() {
@@ -4247,6 +4445,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     if (!rec) { return; }
     if (E.needsPick(rec, state) && !(ui.pick && E.ledgerSum(state, rec.prize, ui.pick) > 0)) { return; }
     persist(E.confirmPlay(state, rec.id, ui.pick));
+    markStep();
     LC.music.stop(0.3);
     R.hideCard();
     R.trayClear();
@@ -4327,11 +4526,29 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function closePrizes() { $("cgPrizeLayer").hidden = true; }
   /* ---------- núm xoay / bàn phím (src/input.js) ---------- */
   /* Nhấn núm: chờ → BẮT ĐẦU; đang chơi → GẮP; túi trong khay → mở túi to; túi to → xé. Thẻ quà: không làm gì (nhân viên bấm tay). */
+  /* MacBook (Admin 21/11 "khỏi dùng chuột luôn"): cả lượt chỉ bằng Space / Enter / nhấn núm — bắt đầu · gắp · xé túi · (← → đổi màu) ·
+     trao xong nhấn lần nữa về màn chờ. Chặn STEP_GUARD_MS giữa các bước để bấm đúp không lỡ bỏ qua bước xác nhận trao quà.
+     iPad giữ như cũ: thẻ quà + "Đã trao" nhân viên bấm tay. */
+  var STEP_GUARD_MS = 700;
+  function markStep() { ui = U.assign(ui, { stepAt: Date.now() }); }
+  function guarded() { return LC.desk.on() && Date.now() - (ui.stepAt || 0) < STEP_GUARD_MS; }
+  function cardOpen() { return !!ui.recId && !$("cgResult").hidden; }
+  function cyclePick(dir) {
+    var rec = findRec(ui.recId);
+    var ids = Array.prototype.map.call(document.querySelectorAll("#cgCard [data-pick]:not([disabled])"), function (b) { return b.getAttribute("data-pick"); });
+    if (!rec || !ids.length) { return; }
+    var i = ids.indexOf(ui.pick);
+    var next = ids[((i < 0 ? 0 : i + dir) % ids.length + ids.length) % ids.length];
+    ui = U.assign(ui, { pick: next });
+    R.markPick(rec, next);
+  }
   function press() {
+    if (guarded()) { return; }
     var p = root.getAttribute("data-phase");
     if (p === "play") { grab(); return; }
     if (!$("cgOpen").hidden) { R.tear(); return; }
     if (ui.recId && $("cgResult").hidden && !$("cgTrayBag").hidden) { openBag(); return; }
+    if (LC.desk.on() && cardOpen()) { finish(); return; }
     if (!busy()) { startRound(); }
   }
   function onDial(action) {
@@ -4340,6 +4557,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     LC.promo.hide();
     if (!$("cgPrizeLayer").hidden) { closePrizes(); if (action === "action") { return; } }
     if (action === "action") { pressKnob(); press(); return; }
+    if (LC.desk.on() && cardOpen()) { spinKnob(action === "left" ? -1 : 1); cyclePick(action === "left" ? -1 : 1); return; }
     step(action === "left" ? -1 : 1);
   }
   function bindKeyboard() {
@@ -4349,6 +4567,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     document.addEventListener("keydown", function (ev) {
       var typing = ev.target && /INPUT|TEXTAREA|SELECT/.test(ev.target.tagName || "");
       if (typing || ev.metaKey || ev.ctrlKey || LC.admin.isOpen() || LC.input.learning()) { return; }
+      if (ev.key === "Escape") { closePrizes(); LC.promo.hide(); return; }
       if ((ev.key || "").toLowerCase() === "m" && !ev.repeat && !busy()) { LC.admin.openModePin(state.mode === "content" ? "event" : "content", ""); }
     });
   }
@@ -4497,7 +4716,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     window.__lc = { CFG: CFG, E: E, getState: function () { return state; }, phase: function () { return root.getAttribute("data-phase"); }, isDemo: isDemo, claw: LC.scene.pos,
                     audio: LC.audio.stats, dial: LC.input.isDial, promo: LC.promo.visible, bridge: LC.input.bridgeStatus,
                     mode: LC.input.mode, media: LC.media.state, sweeping: LC.scene.sweeping, theme: themeInfo, blocked: blocked,
-                    desk: LC.desk.on, awake: LC.desk.awake, perf: LC.perf.info, bags: LC.scene.bagCount,
+                    desk: LC.desk.on, awake: LC.desk.awake, perf: LC.perf.info, bags: LC.scene.bagCount, glow: LC.glow.list, lift: LC.scene.lastLift,
+                    pickFor: LC.scene.pickFor, glowOn: LC.glow.on,
                     idleCheck: function (minutes) { return contentIdleCheck(ui.lastTouch + minutes * 60000); } };
   }
 })(window.LC = window.LC || {});
