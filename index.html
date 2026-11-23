@@ -311,6 +311,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg-hint{margin:28px 0 0;font-family:var(--fv);font-weight:900;font-size:clamp(18px,2.2vw,26px);letter-spacing:.1em;background:var(--gold);-webkit-background-clip:text;background-clip:text;color:transparent;animation:cgPulse 1.1s ease-in-out infinite}
 .cg-open.is-torn .cg-hint{visibility:hidden}
 .cg-result{background:radial-gradient(circle at 50% 44%,color-mix(in srgb,var(--pc) 22%,#141217),rgba(5,5,7,.96) 70%);animation:cgFade .3s ease both}
+/* 23/11: thẻ quà gần như che kín (nền đậm 96 %) → ẩn hẳn tủ + nền phía sau; tia xoay không còn phải trộn lên cả cảnh máy gắp mỗi khung (MacBook cũ: 30 → 60 khung / giây). */
+.cg.is-carded .cg-slot,.cg.is-carded .cg-bg{visibility:hidden}
 /* Hiệu năng: lớp tia xoay chỉ to bằng phần nhìn thấy (92vmax thay 160vmax, mặt nạ tắt ở cùng bán kính 45vmax) → texture nhỏ 3 lần. */
 .cg-rays{position:absolute;left:50%;top:44%;width:92vmax;height:92vmax;transform:translate(-50%,-50%);background:repeating-conic-gradient(from 0deg,var(--pc) 0deg 4deg,transparent 4deg 14deg);opacity:.14;-webkit-mask-image:radial-gradient(closest-side,#000 0%,transparent 98.4%);mask-image:radial-gradient(closest-side,#000 0%,transparent 98.4%);animation:cgRays 50s linear infinite;pointer-events:none;will-change:transform}
 @keyframes cgRays{to{transform:translate(-50%,-50%) rotate(360deg)}}
@@ -655,6 +657,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 /* ---------- máy yếu (src/perf.js → root.is-lite, hoặc ?lite=1): bỏ hiệu ứng phụ, giữ cảnh chính ---------- */
 .cg.is-lite .cg-haze,.cg.is-lite .cg-dust,.cg.is-lite .cg-glints{display:none}
 .cg.is-lite .cg-rays{animation:none}
+/* 23/11: bản nhẹ bỏ thêm chuyển động lặp lúc mở quà (túi to lắc, ảnh quà nhún) */
+.cg.is-lite .cg-openbag:not(.is-shake):not(.is-torn){animation:cgRiseIn .6s cubic-bezier(.2,1.4,.4,1) both}
+.cg.is-lite .cg-photo img,.cg.is-lite .cg-photo .cg-tk{animation:cgIn .7s cubic-bezier(.2,1.6,.4,1) both}
+.cg.is-lite .cg-promo-photo{animation:none}
 .cg.is-lite .cg-tube::before,.cg.is-lite .cg-bf-k{animation:none}
 .cg.is-lite .cg-startbtn::after,.cg.is-lite[data-phase=play] .cg-grab::after{animation:none;opacity:0}
 .cg[data-theme=cyber].is-lite .cg-reflect{background:linear-gradient(180deg,rgba(95,243,255,.06),transparent 22%)}
@@ -841,9 +847,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     return rec.prize === "yoyo" && YOYO_GLOW[colour] ? YOYO_GLOW[colour] : lookOf(rec.prize).glow;
   }
 
-  /* ---------- lưu trữ trên iPad (giữ key cũ; bản lưu cũ thiếu theme / "auto" → "alt" (luân phiên), thiếu plan / quota vẫn mở được) ---------- */
+  /* ---------- lưu trữ trên iPad / MacBook (giữ key cũ; thiếu plan / quota vẫn mở được).
+     theme = giao diện cố định "cyber" | "bf" (bản lưu cũ "alt" / "auto" / thiếu → "cyber", Admin 23/11);
+     contentAlt = luân phiên Cyber ⇄ Black Friday từng khách khi đang Content (mặc định tắt). ---------- */
   function seedState() {
-    return { version: 1, spins: [], ledger: [], extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "alt" };
+    return { version: 1, spins: [], ledger: [], extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "cyber", contentAlt: false };
   }
   function loadState() {
     try {
@@ -856,7 +864,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
                quota: s.quota && typeof s.quota === "object" ? s.quota : {},
                plan: s.plan && typeof s.plan === "object" ? s.plan : {},
                muted: !!s.muted, mode: s.mode === "content" ? "content" : "event",
-               theme: s.theme === "bf" || s.theme === "cyber" ? s.theme : "alt" };
+               theme: s.theme === "bf" ? "bf" : "cyber", contentAlt: s.contentAlt === true };
     } catch (e) { return seedState(); }
   }
   function saveState(s) {
@@ -1058,10 +1066,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 </script>
 <script>
 /* Máy gắp · giao diện.
-   Admin 20/11 chốt ("cái này đẹp nè"): CHỈ dùng CYBER WEEKEND cho cả chương trình (giới thiệu 24–25/11 + sự kiện 26–30/11, Admin 21/11):
+   Admin 20/11 chốt ("cái này đẹp nè"): CYBER WEEKEND cho cả chương trình (giới thiệu 24–25/11 + sự kiện 26–30/11, Admin 21/11):
    navy / tím, ống neon cyan + hồng, bảng LED chấm chạy chữ đếm ngày tới Cyber Monday 30.11, sàn lưới; 30/11 bảng hiệu đổi CYBER MONDAY.
-   21/11 Admin: "quên thêm 1 bản Black Friday nữa, cho phép lựa luân phiên 2 cái" → Quản lý → Giao diện: Cyber / Black Friday / Luân phiên
-   (mặc định Luân phiên: từng khách đổi qua lại, không đổi giữa lượt). ?theme=cyber|bf vẫn ép được (để xem / quay).
+   21/11 Admin: thêm bản Black Friday, chọn trong Quản lý → Giao diện.
+   23/11 Admin ("giữ cố định 1 cái nhé, và content có thể luân phiên đổi nếu muốn"; nhân viên tưởng máy tự nhảy BF → Cyber):
+   Sự kiện = luôn CỐ ĐỊNH 1 giao diện đã chọn (mặc định Cyber Weekend). Luân phiên từng khách chỉ chạy ở chế độ Content và chỉ khi
+   bật "Luân phiên khi quay Content" trong Quản lý. ?theme=cyber|bf vẫn ép được (để xem / quay).
    Chữ có dấu: font BVP Black (Be Vietnam Pro Black); font LW Display chỉ cho chữ không dấu (BLACK FRIDAY, CYBER, số). */
 (function (LC) {
   "use strict";
@@ -1069,16 +1079,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   var MONDAY = "2026-11-30";
 
   function norm(v) { return NAMES.indexOf(v) >= 0 ? v : ""; }
-  /* Cách chọn (Quản lý → Giao diện, Admin 21/11): "cyber" | "bf" | "alt" = luân phiên Cyber ⇄ Black Friday theo từng khách
-     (lượt thứ chẵn Cyber, lẻ Black Friday; đếm theo số lượt đã ghi). Chưa chọn / giá trị lạ → "alt". Đường dẫn ?theme=… luôn thắng.
-     hold = giao diện đang hiện: đang giữa 1 lượt chơi / đang trao quà thì KHÔNG đổi (luân phiên chỉ đổi khi máy rảnh). */
-  var MODES = ["cyber", "bf", "alt"];
-  function normMode(v) { return MODES.indexOf(v) >= 0 ? v : "alt"; }
-  function resolve(day, saved, param, plays, hold) {
+  /* saved = giao diện cố định ("cyber" | "bf"; giá trị lạ / bản lưu cũ "alt" → "cyber"). alt = đang Content + bật luân phiên:
+     lượt thứ chẵn Cyber, lẻ Black Friday (đếm theo số lượt đã ghi). hold = giao diện đang hiện: đang giữa 1 lượt / đang trao quà
+     thì KHÔNG đổi (luân phiên chỉ đổi khi máy rảnh). Đường dẫn ?theme=… luôn thắng. */
+  var DEFAULT = "cyber";
+  function fixed(v) { return norm(v) || DEFAULT; }
+  function resolve(day, saved, param, plays, hold, alt) {
     var p = norm(param);
     if (p) { return p; }
-    var mode = normMode(saved);
-    if (mode !== "alt") { return mode; }
+    if (!alt) { return fixed(saved); }
     if (hold && norm(hold)) { return hold; }
     return (Number(plays) || 0) % 2 === 0 ? "cyber" : "bf";
   }
@@ -1114,7 +1123,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   };
   var current = "cyber";
 
-  LC.theme = { NAMES: NAMES, MODES: MODES, normMode: normMode, MONDAY: MONDAY, norm: norm, resolve: resolve, daysTo: daysTo, countdown: countdown, copy: copy,
+  LC.theme = { NAMES: NAMES, DEFAULT: DEFAULT, fixed: fixed, MONDAY: MONDAY, norm: norm, resolve: resolve, daysTo: daysTo, countdown: countdown, copy: copy,
                current: function () { return current; },
                set: function (name) { current = norm(name) || "cyber"; return current; },
                pal: function () { return PAL[current]; } };
@@ -2754,19 +2763,30 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 </script>
 <script>
 /* Máy gắp · tự hạ hiệu ứng phụ trên máy yếu (Admin 21/11: MacBook Pro 13" đời cũ ở quầy, có thể chip Intel, GPU tích hợp yếu).
-   Chế độ MacBook (src/desk.js): sau khi mở 1,5 giây, đo thời gian khung hình trong 3 giây; nếu đa số khung chậm hơn ~50 khung / giây
-   (trung vị > 20 ms và ≥ 60 % khung > 20 ms) thì bật root.is-lite: bỏ sương mờ trôi, bụi, lấp lánh, vạch quét, tia xoay, nhấp nháy neon,
-   pháo giấy còn một nửa. Cảnh chính (tủ, móc, túi, kệ quà, bảng LED, nút) giữ nguyên.
-   ?lite=1 ép bật (mọi máy) · ?lite=0 ép tắt. iPad: không tự đo (giữ nguyên như cũ). */
+   Bản nhẹ = root.is-lite: bỏ sương mờ trôi, bụi, lấp lánh, vạch quét, tia xoay, nhấp nháy neon, pháo giấy còn một nửa, canvas ít điểm ảnh hơn.
+   Cảnh chính (tủ, móc, túi, kệ quà, bảng LED, nút) giữ nguyên.
+   23/11 (nhân viên báo MacBook lag): trước chỉ đo 3 giây lúc máy đang chờ (phần nhẹ nhất) nên không bao giờ bật bản nhẹ. Giờ ở chế độ
+   MacBook (src/desk.js) đo LIÊN TỤC từng cửa sổ WINDOW_MS, cả lúc chơi / mở quà; cửa sổ chậm khi trung vị > SLOW_MS hoặc
+   ≥ SLOW_SHARE khung chậm hơn SLOW_MS. 2 cửa sổ chậm liền nhau → bật bản nhẹ và NHỚ trên máy (localStorage), lần mở sau vào thẳng bản nhẹ.
+   Không tự tắt lại (tránh nhảy qua nhảy lại). ?lite=1 ép bật · ?lite=0 ép tắt và xoá trạng thái đã nhớ. iPad: không tự đo (giữ như cũ). */
 (function (LC) {
   "use strict";
   var WARMUP_MS = 1500;
-  var SAMPLE_MS = 3000;
+  var WINDOW_MS = 3000;
   var SLOW_MS = 20;
-  var info = { lite: false, source: "", fps: 0, slowShare: 0, frames: 0 };
+  var SLOW_SHARE = 0.4;
+  var NEED_SLOW = 2;
+  var KEY = "lucas-may-gap-lite";
+  var info = { lite: false, source: "", fps: 0, slowShare: 0, frames: 0, windows: 0, slowRun: 0 };
 
   function param() {
     try { return new URLSearchParams(window.location.search).get("lite"); } catch (e) { return null; }
+  }
+  function remembered() {
+    try { return window.localStorage.getItem(KEY) === "1"; } catch (e) { return false; }
+  }
+  function remember(on) {
+    try { if (on) { window.localStorage.setItem(KEY, "1"); } else { window.localStorage.removeItem(KEY); } } catch (e) { return; }
   }
   var onChange = null;
   function apply(on, source) {
@@ -2780,19 +2800,32 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var s = list.slice().sort(function (a, b) { return a - b; });
     return s.length ? s[Math.floor(s.length / 2)] : 0;
   }
-  /* 1 vòng đo duy nhất; trang bị ẩn giữa chừng thì bỏ kết quả (rAF ngừng chạy khi ẩn). */
-  function measure() {
+  /* Chấm 1 cửa sổ đo; trả về true khi đã đủ cửa sổ chậm để bật bản nhẹ. */
+  function score(dts) {
+    var med = median(dts);
+    var slow = dts.filter(function (d) { return d > SLOW_MS; }).length / dts.length;
+    var bad = med > SLOW_MS || slow >= SLOW_SHARE;
+    var run = bad ? info.slowRun + 1 : 0;
+    info = Object.assign({}, info, { fps: Math.round(1000 / Math.max(1, med)), slowShare: +slow.toFixed(2), frames: info.frames + dts.length,
+                                     windows: info.windows + 1, slowRun: run });
+    return run >= NEED_SLOW;
+  }
+  /* Đo liên tục; trang bị ẩn thì bỏ cửa sổ đang đo (rAF ngừng chạy khi ẩn, khoảng trống không phải là lag). */
+  function watch() {
     var dts = []; var last = 0; var t0 = 0;
     var step = function (ts) {
-      if (document.visibilityState !== "visible") { info = Object.assign({}, info, { source: "hidden" }); return; }
+      if (info.lite) { return; }
+      if (document.visibilityState !== "visible") { dts = []; last = 0; t0 = 0; window.requestAnimationFrame(step); return; }
       if (!t0) { t0 = ts; last = ts; window.requestAnimationFrame(step); return; }
       dts.push(ts - last); last = ts;
-      if (ts - t0 < SAMPLE_MS) { window.requestAnimationFrame(step); return; }
-      var med = median(dts);
-      var slow = dts.filter(function (d) { return d > SLOW_MS; }).length / dts.length;
-      info = Object.assign({}, info, { fps: Math.round(1000 / Math.max(1, med)), slowShare: +slow.toFixed(2), frames: dts.length });
-      apply(med > SLOW_MS && slow >= 0.6, "measured");
+      if (ts - t0 >= WINDOW_MS) {
+        var slow = score(dts);
+        dts = []; t0 = ts;
+        if (slow) { remember(true); apply(true, "measured"); return; }
+      }
+      window.requestAnimationFrame(step);
     };
+    info = Object.assign({}, info, { source: "measuring" });
     window.setTimeout(function () { window.requestAnimationFrame(step); }, WARMUP_MS);
   }
   /* opts.onChange(lite): gọi khi bật / tắt bản nhẹ (app hạ độ phân giải canvas). */
@@ -2800,8 +2833,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     onChange = (opts && opts.onChange) || null;
     var p = param();
     if (p === "1") { apply(true, "url"); return; }
-    if (p === "0") { apply(false, "url"); return; }
-    if (LC.desk && LC.desk.on()) { measure(); }
+    if (p === "0") { remember(false); apply(false, "url"); return; }
+    if (!LC.desk || !LC.desk.on()) { return; }
+    if (remembered()) { apply(true, "remembered"); return; }
+    watch();
   }
 
   LC.perf = { init: init, lite: function () { return info.lite; }, info: function () { return info; } };
@@ -3316,11 +3351,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var moving = moveByInput(dt);
     if (S.phase === "play") { if (moving) { LC.audio.motorOn(1); } else { LC.audio.motorOff(); } }
     stepSeq(dt);
-    LC.glow.tick(dt, ts, S.pile, !!S.seq || !!S.held || !!S.falling);
+    /* Túi to / thẻ quà / Quản lý che tủ (23/11): ngừng nhịp sáng túi + lớp glow → bớt tải ảnh canvas lên màn hình mỗi khung (MacBook cũ). */
+    if (!S.covered) { LC.glow.tick(dt, ts, S.pile, !!S.seq || !!S.held || !!S.falling); }
     if (S.phase === "idle" && !S.seq) { S.L = S.L0 + Math.sin(ts / 700) * 3; }
     physics(dt);
     draw();
-    paintGlow(ts);
+    if (!S.covered) { paintGlow(ts); }
     window.requestAnimationFrame(frame);
   }
   function sizeLayer(L, W, H) { L.c.width = Math.round(W * S.dpr); L.c.height = Math.round(H * S.dpr); L.dirty.on = false; }
@@ -3466,7 +3502,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     return true;
   }
   function debugState() { var f = S.falling; return { falling: f ? { y: f.y, vy: f.vy, x: f.x } : null, H: S.H, seq: S.seq ? S.seq.i : -1, held: !!S.held, last: S.last, phase: S.phase }; }
-  LC.scene = { init: init, resize: resize, restyle: restyle, finishDrop: finishDrop, debug: debugState, setPixelBudget: setPixelBudget, setGlow: function (on) { LC.glow.setOn(on); },
+  function setCovered(on) { if (S) { S.covered = !!on; } }
+  LC.scene = { init: init, resize: resize, restyle: restyle, setCovered: setCovered, finishDrop: finishDrop, debug: debugState, setPixelBudget: setPixelBudget, setGlow: function (on) { LC.glow.setOn(on); },
                lastLift: function () { return S.lastLift; }, pickFor: function (special, x, z) { var p = LC.glow.pickFor(special, S.pile, x, z);
                  return { target: p.target && p.target.id, targetGlowing: !!p.target && LC.glow.isGlowing(p.target), decoy: p.decoy && p.decoy.id, lightUp: p.lightUp }; },
                bagAt: function (id) { var op = S.ops[S.opIndex[id]]; return op && op.bag ? { x: op.bag.x, z: op.bag.z } : null; }, chute: function () { return { x: S.chute.x, w: S.chute.w }; }, bagCount: function () { return S.pile.length; }, startRound: startRound, grab: grab, reset: reset, setInput: setInput, setDrag: setDrag, knobStep: knobStep, setSweep: setSweep,
@@ -3642,8 +3679,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
            box: { x0: 0, y0: 0, x1: 0, y1: 0, on: false } };
     return cf;
   }
+  /* Pháo giấy kín màn hình: MacBook / bản nhẹ vẽ ở độ phân giải 1x (23/11: canvas retina 4 triệu điểm ảnh tải lên GPU mỗi khung làm khựng lúc mở quà). */
   function fitConfetti(q) {
-    var w = q.c.clientWidth; var h = q.c.clientHeight; var k = dpr();
+    var w = q.c.clientWidth; var h = q.c.clientHeight; var k = LC.desk.on() || LC.perf.lite() ? 1 : dpr();
     if (w === q.w && h === q.h && k === q.k) { return; }
     q.w = w; q.h = h; q.k = k;
     q.c.width = Math.round(w * k); q.c.height = Math.round(h * k);
@@ -3841,17 +3879,21 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mode\">Đổi sang " + (content ? "Sự kiện" : "Content") + "</button>" +
       (LC.desk.on() ? "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"fullscreen\">" + (LC.desk.isFull() ? "Thoát toàn màn hình" : "Toàn màn hình") + "</button>" : "") + "</div>" + themeHtml(s);
   }
-  /* Giao diện máy (Admin 21/11): Cyber / Black Friday / Luân phiên từng khách (chỉ đổi khi máy rảnh). */
-  var THEME_LABEL = { cyber: "Cyber Weekend", bf: "Black Friday", alt: "Luân phiên" };
+  /* Giao diện máy (Admin 23/11): Sự kiện luôn cố định Cyber Weekend hoặc Black Friday; Content có thể bật luân phiên từng khách. */
+  var THEME_LABEL = { cyber: "Cyber Weekend", bf: "Black Friday" };
   function themeHtml(s) {
-    var cur = LC.theme.normMode(s.theme);
+    var cur = LC.theme.fixed(s.theme);
     var info = LC.app.themeInfo();
     var btn = function (k) {
       return "<button class=\"cg-btn" + (cur === k ? "" : " is-soft") + "\" type=\"button\" data-act=\"theme\" data-k=\"" + k + "\"" + (cur === k ? " aria-pressed=\"true\"" : "") + ">" + THEME_LABEL[k] + "</button>";
     };
-    return "<h3>Giao diện máy</h3><p id=\"cgThemeNow\" data-mode=\"" + cur + "\">Đang chọn: <b>" + THEME_LABEL[cur] + "</b> · đang hiện: <b>" + THEME_LABEL[info.name] + "</b>" +
-      (info.param ? " (đường dẫn ép ?theme=" + esc(info.param) + ")" : "") + ". Luân phiên: khách này Cyber, khách sau Black Friday, rồi lặp lại; chỉ đổi khi máy rảnh.</p>" +
-      "<div class=\"cg-row\">" + ["alt", "cyber", "bf"].map(btn).join("") + "</div>";
+    var alt = s.contentAlt === true;
+    return "<h3>Giao diện máy</h3><p id=\"cgThemeNow\" data-mode=\"" + cur + "\">Cố định: <b>" + THEME_LABEL[cur] + "</b> · đang hiện: <b>" + THEME_LABEL[info.name] + "</b>" +
+      (info.param ? " (đường dẫn ép ?theme=" + esc(info.param) + ")" : "") + ". Lúc Sự kiện máy luôn giữ giao diện này.</p>" +
+      "<div class=\"cg-row\">" + ["cyber", "bf"].map(btn).join("") + "</div>" +
+      "<p>Luân phiên khi quay Content: <b>" + (alt ? "Bật" : "Tắt") + "</b>. Khi bật, chỉ ở chế độ Content: khách này Cyber, khách sau Black Friday, chỉ đổi khi máy rảnh.</p>" +
+      "<div class=\"cg-row\"><button class=\"cg-btn is-soft\" type=\"button\" data-act=\"contentalt\"" + (alt ? " aria-pressed=\"true\"" : "") + ">" +
+      (alt ? "Tắt luân phiên Content" : "Bật luân phiên Content") + "</button></div>";
   }
   /* "Khách thứ n / 50" + quà đặc biệt còn phải ra (Σ min(suất còn, hàng còn)) + báo máy khóa khi hết quà. */
   function windowHtml(s) {
@@ -4120,7 +4162,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     mute: function () { LC.app.setMuted(!st().muted); },
     fullscreen: function () { LC.desk.toggleFull(); },
     mode: function () { persist(U.assign(st(), { mode: st().mode === "content" ? "event" : "content" })); },
-    theme: function (b, parts) { persist(U.assign(st(), { theme: LC.theme.normMode(parts[0]) })); },
+    theme: function (b, parts) { persist(U.assign(st(), { theme: LC.theme.fixed(parts[0]) })); },
+    contentalt: function () { persist(U.assign(st(), { contentAlt: st().contentAlt !== true })); },
     csvspins: function () { download("may-gap-black-friday_luot-gap_" + LC.app.today() + ".csv", csvSpins()); },
     csvstock: function () { download("may-gap-black-friday_lich-su-kho_" + LC.app.today() + ".csv", csvStock()); }
   };
@@ -4239,7 +4282,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
    "Quà trong máy" mở bảng gọn. Máy rảnh ~20 giây: giới thiệu D100H (src/promo.js).
    Vòng 3: 2 chế độ (src/input.js) — "sweep" = móc tự quét, nhấn núm đúng lúc để gắp (iPad, núm qua phím media src/media.js);
    "knob" = xoay núm lái móc. root[data-mode] đổi gợi ý trên bàn điều khiển.
-   20/11 → 21/11: root[data-theme] = cyber | bf theo Quản lý → Giao diện (Cyber / Black Friday / Luân phiên từng khách; src/theme.js; ?theme= ép được); hết quà (engine.canPlay) → khóa máy,
+   20/11 → 23/11: root[data-theme] = cyber | bf theo Quản lý → Giao diện (Sự kiện: cố định 1 giao diện; Content: luân phiên từng khách nếu bật; src/theme.js; ?theme= ép được); hết quà (engine.canPlay) → khóa máy,
    màn hình "Hết quà" cho nhân viên tới khi nhập thêm kho. */
 (function (LC) {
   "use strict";
@@ -4278,9 +4321,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function buildLed() {
     if (LC.theme.current() === "cyber") { LC.led.build($("cgLed"), LC.theme.copy("cyber", today()).ticker, REDUCED); }
   }
+  function altOn() { return state.mode === "content" && !!state.contentAlt; }
   function applyTheme() {
     var day = today();
-    var name = LC.theme.resolve(day, state.theme, THEME_PARAM, state.spins.length, busy() ? LC.theme.current() : "");
+    var name = LC.theme.resolve(day, state.theme, THEME_PARAM, state.spins.length, busy() ? LC.theme.current() : "", altOn());
     var c = LC.theme.copy(name, day);
     var key = name + "|" + c.hero + "|" + c.date + "|" + c.ticker.map(function (x) { return x.t; }).join("");
     if (key === themeKey) { return false; }
@@ -4677,10 +4721,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       }).join("") + "</b>";
     }).join("");
   }
-  /* Thẻ quà / Quản lý che kín tủ máy → dừng đèn chạy, bụi vàng, vệt sáng phía sau. */
+  /* Túi to / thẻ quà / Quản lý che kín tủ máy → dừng đèn chạy, bụi vàng, vệt sáng phía sau, nhịp sáng túi trong kính (23/11: thêm túi to). */
   function watchCover() {
-    var layers = [$("cgResult"), $("cgAdminLayer")];
-    var sync = function () { root.classList.toggle("is-covered", layers.some(function (el) { return !el.hidden; })); };
+    var layers = [$("cgOpen"), $("cgResult"), $("cgAdminLayer")];
+    var sync = function () {
+      var on = layers.some(function (el) { return !el.hidden; });
+      root.classList.toggle("is-covered", on);
+      root.classList.toggle("is-carded", !$("cgResult").hidden);
+      LC.scene.setCovered(on);
+    };
     if (window.MutationObserver) {
       var mo = new MutationObserver(sync);
       layers.forEach(function (el) { mo.observe(el, { attributes: true, attributeFilter: ["hidden"] }); });
@@ -4746,18 +4795,18 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     });
   }
 
-  function themeInfo() { return { name: LC.theme.current(), param: THEME_PARAM }; }
+  function themeInfo() { return { name: LC.theme.current(), param: THEME_PARAM, alt: altOn() }; }
 
   LC.app = { state: function () { return state; }, persist: persist, render: render, today: today, isDemo: isDemo, isTest: isTest, setMuted: setMuted, themeInfo: themeInfo,
              fast: function () { return FAST; }, reduced: function () { return REDUCED; } };
 
-  LC.theme.set(LC.theme.resolve(today(), state.theme, THEME_PARAM, state.spins.length, ""));
+  LC.theme.set(LC.theme.resolve(today(), state.theme, THEME_PARAM, state.spins.length, "", altOn()));
   buildBulbs();
   buildDust();
   loadArt();
-  watchCover();
   LC.audio.setMuted(state.muted);
   LC.scene.init($("cgScene"), { speed: FAST ? 0.08 : 1, phase: function (p) { root.setAttribute("data-phase", p); }, delivered: delivered });
+  watchCover();
   bind();
   layout();
   render();
