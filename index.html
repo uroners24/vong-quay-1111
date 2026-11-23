@@ -661,6 +661,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 .cg.is-lite .cg-openbag:not(.is-shake):not(.is-torn){animation:cgRiseIn .6s cubic-bezier(.2,1.4,.4,1) both}
 .cg.is-lite .cg-photo img,.cg.is-lite .cg-photo .cg-tk{animation:cgIn .7s cubic-bezier(.2,1.6,.4,1) both}
 .cg.is-lite .cg-promo-photo{animation:none}
+.cg.is-lite .cg-strip b,.cg.is-lite .cg-startbtn::before{animation:none}
 .cg.is-lite .cg-tube::before,.cg.is-lite .cg-bf-k{animation:none}
 .cg.is-lite .cg-startbtn::after,.cg.is-lite[data-phase=play] .cg-grab::after{animation:none;opacity:0}
 .cg[data-theme=cyber].is-lite .cg-reflect{background:linear-gradient(180deg,rgba(95,243,255,.06),transparent 22%)}
@@ -2768,7 +2769,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
    23/11 (nhân viên báo MacBook lag): trước chỉ đo 3 giây lúc máy đang chờ (phần nhẹ nhất) nên không bao giờ bật bản nhẹ. Giờ ở chế độ
    MacBook (src/desk.js) đo LIÊN TỤC từng cửa sổ WINDOW_MS, cả lúc chơi / mở quà; cửa sổ chậm khi trung vị > SLOW_MS hoặc
    ≥ SLOW_SHARE khung chậm hơn SLOW_MS. 2 cửa sổ chậm liền nhau → bật bản nhẹ và NHỚ trên máy (localStorage), lần mở sau vào thẳng bản nhẹ.
-   Không tự tắt lại (tránh nhảy qua nhảy lại). ?lite=1 ép bật · ?lite=0 ép tắt và xoá trạng thái đã nhớ. iPad: không tự đo (giữ như cũ). */
+   Không tự tắt lại (tránh nhảy qua nhảy lại). iPad: không tự đo (giữ như cũ).
+   23/11 vòng 2 (nhân viên: "vẫn còn hơi khựng"; máy quầy = MacBook Pro 13" 2016, Intel Iris, retina): chế độ MacBook VÀO THẲNG bản nhẹ
+   (canvas 1x, nhịp sáng 30 lần / giây, bớt hiệu ứng lặp). ?lite=auto = đo rồi mới quyết như trên · ?lite=1 ép bật ·
+   ?lite=0 ép bản đầy đủ và xoá trạng thái đã nhớ.
+   Đo cho Quản lý (stats): khung hình 10 giây gần nhất (trung vị, % khung chậm, khung dài nhất), đo cả khi đã ở bản nhẹ. */
 (function (LC) {
   "use strict";
   var WARMUP_MS = 1500;
@@ -2829,17 +2834,41 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     window.setTimeout(function () { window.requestAnimationFrame(step); }, WARMUP_MS);
   }
   /* opts.onChange(lite): gọi khi bật / tắt bản nhẹ (app hạ độ phân giải canvas). */
+  /* Thống kê khung hình 10 giây gần nhất cho Quản lý → Hiệu năng (vòng đệm cố định, không cấp phát mỗi khung). */
+  var RING_N = 600;
+  var ring = { d: new Float32Array(RING_N), t: new Float64Array(RING_N), i: 0, last: 0 };
+  function record() {
+    var step = function (ts) {
+      if (document.visibilityState === "visible" && ring.last) {
+        ring.d[ring.i] = ts - ring.last; ring.t[ring.i] = ts; ring.i = (ring.i + 1) % RING_N;
+      }
+      ring.last = document.visibilityState === "visible" ? ts : 0;
+      window.requestAnimationFrame(step);
+    };
+    window.requestAnimationFrame(step);
+  }
+  function stats() {
+    var now = performance.now();
+    var list = [];
+    for (var i = 0; i < RING_N; i += 1) { if (ring.t[i] && now - ring.t[i] < 10000) { list.push(ring.d[i]); } }
+    if (!list.length) { return { fps: 0, slowShare: 0, worst: 0, frames: 0 }; }
+    var med = median(list);
+    return { fps: Math.round(1000 / Math.max(1, med)), slowShare: +(list.filter(function (d) { return d > SLOW_MS; }).length / list.length).toFixed(2),
+             worst: Math.round(Math.max.apply(null, list)), frames: list.length };
+  }
   function init(opts) {
     onChange = (opts && opts.onChange) || null;
+    record();
     var p = param();
     if (p === "1") { apply(true, "url"); return; }
     if (p === "0") { remember(false); apply(false, "url"); return; }
     if (!LC.desk || !LC.desk.on()) { return; }
+    if (p !== "auto") { apply(true, "desk"); return; }
     if (remembered()) { apply(true, "remembered"); return; }
     watch();
   }
 
-  LC.perf = { init: init, lite: function () { return info.lite; }, info: function () { return info; } };
+  LC.perf = { init: init, lite: function () { return info.lite; }, info: function () { return info; }, stats: stats };
 })(window.LC = window.LC || {});
 </script>
 <script>
@@ -3352,11 +3381,16 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     if (S.phase === "play") { if (moving) { LC.audio.motorOn(1); } else { LC.audio.motorOff(); } }
     stepSeq(dt);
     /* Túi to / thẻ quà / Quản lý che tủ (23/11): ngừng nhịp sáng túi + lớp glow → bớt tải ảnh canvas lên màn hình mỗi khung (MacBook cũ). */
-    if (!S.covered) { LC.glow.tick(dt, ts, S.pile, !!S.seq || !!S.held || !!S.falling); }
-    if (S.phase === "idle" && !S.seq) { S.L = S.L0 + Math.sin(ts / 700) * 3; }
+    /* Bản nhẹ (23/11 vòng 2, MacBook 2016 vẫn khựng): nhịp sáng túi + móc nhún lúc chờ chỉ cập nhật cách 1 khung (30 lần / giây) →
+       bớt một nửa số lần 2 lớp canvas cỡ cả mặt kính (mid + glow) phải tải lại; móc lúc chơi / gắp vẫn 60 khung / giây. */
+    S.tick = (S.tick + 1) % 2;
+    S.glowDt += dt;
+    var slowBeat = !S.half || S.tick === 0;
+    if (!S.covered && slowBeat) { LC.glow.tick(S.glowDt, ts, S.pile, !!S.seq || !!S.held || !!S.falling); S.glowDt = 0; }
+    if (S.phase === "idle" && !S.seq && slowBeat) { S.L = S.L0 + Math.sin(ts / 700) * 3; }
     physics(dt);
     draw();
-    if (!S.covered) { paintGlow(ts); }
+    if (!S.covered && slowBeat) { paintGlow(ts); }
     window.requestAnimationFrame(frame);
   }
   function sizeLayer(L, W, H) { L.c.width = Math.round(W * S.dpr); L.c.height = Math.round(H * S.dpr); L.dirty.on = false; }
@@ -3380,7 +3414,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var W = c.clientWidth; var H = c.clientHeight;
     if (!W || !H) { return; }
     /* Tủ to hơn (17/11): giới hạn điểm ảnh mỗi lớp canvas để iPad cũ vẫn 60 khung / giây. */
-    S.dpr = Math.min(2, window.devicePixelRatio || 1, Math.sqrt(S.maxPx / (W * H)));
+    /* dprCap (23/11): MacBook bản nhẹ vẽ canvas ở 1x (retina 2x = gấp 4 điểm ảnh phải tải lên GPU Intel Iris mỗi khung). */
+    S.dpr = Math.min(S.dprCap, window.devicePixelRatio || 1, Math.sqrt(S.maxPx / (W * H)));
     usePile(isWideGlass() ? Math.round(pileFactor(W, H) / WIDE_BAG * 4) / 4 : pileFactor(W, H), (W * 0.025 + Math.min(W * 0.22, H * (W / H >= 1.9 ? 0.3 : 0.5))) / W + 0.035);
     S.W = W; S.H = H;
     ["back", "mid", "front", "glow", "top"].forEach(function (k) { sizeLayer(S.ly[k], W, H); });
@@ -3423,7 +3458,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
           sw: { on: false, pass: null, dur: SWEEP.dur, hold: 0 }, seq: null, last: 0, lastX: 0, lastVx: 0,
           pile: pile, ops: ops, opIndex: opIndex, split: 0, sprites: [], W: 0, H: 0, dpr: 1, chute: { x: 0, y: 0, w: 0, h: 0 },
           rigR: rect(), spotR: rect(), rigDirty: true, topDirty: true, sigNow: new Float64Array(SIG_N), sigLast: new Float64Array(SIG_N),
-          pileK: 1, maxPx: MAX_LAYER_PX, glowR: rect(), glowSprites: [], heldGlow: false, lastLift: null };
+          pileK: 1, maxPx: MAX_LAYER_PX, tick: 0, glowDt: 0, half: false, covered: false, dprCap: 2, glowR: rect(), glowSprites: [], heldGlow: false, lastLift: null };
     S.ly = { back: underLayer(c, "back"), mid: underLayer(c, "mid"), front: underLayer(c, "front"), glow: underLayer(c, "glow"), top: makeLayer(c) };
     S.setPhase = function (p) { S.phase = p; S.rigDirty = true; if (S.on.phase) { S.on.phase(p); } };
     resize();
@@ -3503,7 +3538,9 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   }
   function debugState() { var f = S.falling; return { falling: f ? { y: f.y, vy: f.vy, x: f.x } : null, H: S.H, seq: S.seq ? S.seq.i : -1, held: !!S.held, last: S.last, phase: S.phase }; }
   function setCovered(on) { if (S) { S.covered = !!on; } }
-  LC.scene = { init: init, resize: resize, restyle: restyle, setCovered: setCovered, finishDrop: finishDrop, debug: debugState, setPixelBudget: setPixelBudget, setGlow: function (on) { LC.glow.setOn(on); },
+  function setHalfRate(on) { if (S) { S.half = !!on; } }
+  function setDprCap(v) { if (S) { S.dprCap = v > 0 ? v : 2; } }
+  LC.scene = { init: init, resize: resize, restyle: restyle, setCovered: setCovered, setHalfRate: setHalfRate, setDprCap: setDprCap, finishDrop: finishDrop, debug: debugState, setPixelBudget: setPixelBudget, setGlow: function (on) { LC.glow.setOn(on); },
                lastLift: function () { return S.lastLift; }, pickFor: function (special, x, z) { var p = LC.glow.pickFor(special, S.pile, x, z);
                  return { target: p.target && p.target.id, targetGlowing: !!p.target && LC.glow.isGlowing(p.target), decoy: p.decoy && p.decoy.id, lightUp: p.lightUp }; },
                bagAt: function (id) { var op = S.ops[S.opIndex[id]]; return op && op.bag ? { x: op.bag.x, z: op.bag.z } : null; }, chute: function () { return { x: S.chute.x, w: S.chute.w }; }, bagCount: function () { return S.pile.length; }, startRound: startRound, grab: grab, reset: reset, setInput: setInput, setDrag: setDrag, knobStep: knobStep, setSweep: setSweep,
@@ -3877,7 +3914,26 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       "<button class=\"cg-btn is-red\" type=\"button\" data-act=\"resetall\">" + (admin.resetArmed ? "Bấm lần nữa: xóa hết lượt chơi, trả quà về kho" : "Bắt đầu lại") + "</button>" +
       "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mute\">" + (s.muted ? "Bật âm thanh" : "Tắt âm thanh") + "</button>" +
       "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"mode\">Đổi sang " + (content ? "Sự kiện" : "Content") + "</button>" +
-      (LC.desk.on() ? "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"fullscreen\">" + (LC.desk.isFull() ? "Thoát toàn màn hình" : "Toàn màn hình") + "</button>" : "") + "</div>" + themeHtml(s);
+      (LC.desk.on() ? "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"fullscreen\">" + (LC.desk.isFull() ? "Thoát toàn màn hình" : "Toàn màn hình") + "</button>" : "") + "</div>" + themeHtml(s) + perfHtml();
+  }
+  /* Hiệu năng (23/11): số đo thật trên máy đang chạy để nhân viên chụp gửi Lucas khi máy khựng. Tên GPU đọc 1 lần (WebGL). */
+  var gpuName = null;
+  function gpu() {
+    if (gpuName !== null) { return gpuName; }
+    try {
+      var gl = document.createElement("canvas").getContext("webgl");
+      var ext = gl && gl.getExtension("WEBGL_debug_renderer_info");
+      gpuName = gl ? String(ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER)) : "không có WebGL";
+    } catch (e) { gpuName = "không đọc được"; }
+    return gpuName;
+  }
+  function perfHtml() {
+    var st = LC.perf.stats(); var inf = LC.perf.info();
+    var src = { desk: "MacBook mặc định", url: "đường dẫn", measured: "tự đo", remembered: "đã nhớ", measuring: "đang đo", "": "" }[inf.source] || inf.source;
+    return "<h3>Hiệu năng</h3><p id=\"cgPerfNow\">Bản: <b>" + (inf.lite ? "nhẹ" : "đầy đủ") + "</b>" + (src ? " (" + esc(src) + ")" : "") +
+      " · 10 giây qua: <b>" + st.fps + "</b> khung / giây, " + Math.round(st.slowShare * 100) + "% khung chậm, khung dài nhất " + st.worst + " ms" +
+      " · màn " + window.innerWidth + "×" + window.innerHeight + " @" + (window.devicePixelRatio || 1) + "x · GPU: " + esc(gpu()) +
+      ". Máy khựng thì chụp dòng này gửi Lucas.</p>";
   }
   /* Giao diện máy (Admin 23/11): Sự kiện luôn cố định Cyber Weekend hoặc Black Friday; Content có thể bật luân phiên từng khách. */
   var THEME_LABEL = { cyber: "Cyber Weekend", bf: "Black Friday" };
@@ -4773,7 +4829,12 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     /* MacBook: trần điểm ảnh canvas thấp hơn iPad (GPU Intel Iris đời 2016); bản nhẹ còn thấp hơn nữa. */
     var budget = function (lite) { return lite ? 0.85e6 : 1.3e6; };
     if (LC.desk.on()) { LC.scene.setPixelBudget(budget(false)); }
-    LC.perf.init({ onChange: function (lite) { if (LC.desk.on() || lite) { LC.scene.setPixelBudget(budget(lite)); layout(); } } });
+    /* Bản nhẹ (23/11 vòng 2): MacBook → canvas 1x; mọi máy → nhịp sáng / móc nhún lúc chờ 30 lần / giây. */
+    LC.perf.init({ onChange: function (lite) {
+      LC.scene.setHalfRate(lite);
+      LC.scene.setDprCap(lite && LC.desk.on() ? 1 : 2);
+      if (LC.desk.on() || lite) { LC.scene.setPixelBudget(budget(lite)); layout(); }
+    } });
     $("cgPrizeBtn").addEventListener("click", openPrizes);
     $("cgPrizeLayer").addEventListener("click", closePrizes);
     $("cgStart").addEventListener("click", startRound);
@@ -4819,6 +4880,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   } catch (e) { layout(); }
   restorePending();
   R.warmBags();
+  /* MacBook (23/11): dựng sẵn bộ âm thanh lúc máy đang chờ (tạo AudioContext + 2 giây tiếng ồn mất ~25–50 ms trên máy cũ) thay vì
+     đúng lúc khách bấm phím đầu tiên → hết cú khựng khi BẮT ĐẦU lượt đầu. Chrome kiosk chạy --autoplay-policy=no-user-gesture-required;
+     trình duyệt khác thì AudioContext tạm dừng tới lần bấm đầu (unlock gọi resume). */
+  if (LC.desk.on()) { window.setTimeout(LC.audio.unlock, 2500); }
   if (DEBUG) {
     window.__lc = { CFG: CFG, E: E, getState: function () { return state; }, phase: function () { return root.getAttribute("data-phase"); }, isDemo: isDemo, claw: LC.scene.pos,
                     audio: LC.audio.stats, dial: LC.input.isDial, promo: LC.promo.visible, bridge: LC.input.bridgeStatus,
