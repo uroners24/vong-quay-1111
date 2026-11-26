@@ -851,8 +851,17 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   /* ---------- lưu trữ trên iPad / MacBook (giữ key cũ; thiếu plan / quota vẫn mở được).
      theme = giao diện cố định "cyber" | "bf" (bản lưu cũ "alt" / "auto" / thiếu → "bf", Admin 25/11);
      contentAlt = luân phiên Cyber ⇄ Black Friday từng khách khi đang Content (mặc định tắt). ---------- */
+  /* Admin 26/11 ("sao phải nhập số lượng, bữa chốt rồi"): kho mặc định tự nạp khi máy chưa có lần nhập kho nào —
+     quà đặc biệt = đúng suất đã chốt; YOYO / móc khóa để dư, nhân viên chỉnh lại trong Quản lý nếu cần. */
+  var DEFAULT_STOCK = [["hub", "vang", 1], ["hub", "den", 1], ["non", "hyper", 3], ["tuida", "tuida", 2], ["wipe", "wipe", 2],
+    ["yoyo", "orange", 30], ["yoyo", "lemon", 30], ["yoyo", "pink", 30], ["yoyo", "purple", 30], ["yoyo", "forest", 30],
+    ["mockhoa", "mockhoa", 150]];
+  function withDefaultStock(ledger) {
+    var hasIn = ledger.some(function (e) { return e.kind === "nhap"; });
+    return hasIn ? ledger : DEFAULT_STOCK.map(function (r) { return stockEntry(r[0], r[1], r[2], "nhap", "Kho mặc định (tự nạp)"); }).concat(ledger);
+  }
   function seedState() {
-    return { version: 1, spins: [], ledger: [], extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "bf", contentAlt: false };
+    return { version: 1, spins: [], ledger: withDefaultStock([]), extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "bf", contentAlt: false };
   }
   function loadState() {
     try {
@@ -860,7 +869,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       if (!raw) { return seedState(); }
       var s = JSON.parse(raw);
       if (!s || s.version !== 1 || !Array.isArray(s.spins) || !Array.isArray(s.ledger)) { return seedState(); }
-      return { version: 1, spins: s.spins, ledger: s.ledger, extra: s.extra || {},
+      return { version: 1, spins: s.spins, ledger: withDefaultStock(s.ledger), extra: s.extra || {},
                custom: Array.isArray(s.custom) ? s.custom : [],
                quota: s.quota && typeof s.quota === "object" ? s.quota : {},
                plan: s.plan && typeof s.plan === "object" ? s.plan : {},
