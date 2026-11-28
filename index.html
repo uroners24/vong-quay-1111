@@ -736,6 +736,102 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
 <canvas class="cg-confetti" id="cgConfetti"></canvas>
 </div>
 <script>
+/* Máy gắp · lưu dữ liệu (Admin 28/11: máy quầy báo "Không lưu được", lịch sử quà phải còn).
+   Mỗi lần lưu ghi 2 nơi: localStorage (đọc ngay khi mở trang) + bản dự phòng IndexedDB (ghi nền). Mở trang thì lấy bản mới nhất
+   theo savedAt, nên localStorage hỏng / đầy / bị chặn vẫn còn bản dự phòng. Cả hai đều không ghi được → app báo đừng tắt trang
+   và nhân viên vào Quản lý → Sao lưu tải file. Không xóa key nào của trang khác cùng địa chỉ. */
+(function (LC) {
+  "use strict";
+  var DB_NAME = "lucas_may_gap";
+  var DB_STORE = "kv";
+  var status = { local: "", localError: "", readError: "", mirror: "", mirrorAt: "", savedAt: "" };
+  var dbPromise = null;
+  var listener = null;
+
+  function reasonOf(e) {
+    var name = (e && e.name) || "";
+    if (/quota/i.test(name) || (e && (e.code === 22 || e.code === 1014))) { return "quota"; }
+    if (/security/i.test(name)) { return "blocked"; }
+    return "error";
+  }
+  function setStatus(patch) { status = Object.assign({}, status, patch); }
+  function notify() { if (listener) { try { listener(info()); } catch (e) { return; } } }
+
+  /* ---------- localStorage ---------- */
+  function readLocal(key) {
+    try {
+      var raw = window.localStorage.getItem(key);
+      setStatus({ readError: "" });
+      return raw;
+    } catch (e) { setStatus({ readError: reasonOf(e) }); return null; }
+  }
+  function writeLocal(key, text) {
+    try {
+      window.localStorage.setItem(key, text);
+      setStatus({ local: "ok", localError: "" });
+      return true;
+    } catch (e) { setStatus({ local: "fail", localError: reasonOf(e) }); return false; }
+  }
+
+  /* ---------- IndexedDB (bản dự phòng) ---------- */
+  function openDb() {
+    if (dbPromise) { return dbPromise; }
+    dbPromise = new Promise(function (resolve) {
+      try {
+        if (!window.indexedDB) { resolve(null); return; }
+        var req = window.indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = function () { req.result.createObjectStore(DB_STORE); };
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+        req.onblocked = function () { resolve(null); };
+      } catch (e) { resolve(null); }
+    });
+    return dbPromise;
+  }
+  function idb(mode, run) {
+    return openDb().then(function (db) {
+      if (!db) { return Promise.reject(new Error("no-idb")); }
+      return new Promise(function (resolve, reject) {
+        try {
+          var tx = db.transaction(DB_STORE, mode);
+          var req = run(tx.objectStore(DB_STORE));
+          tx.oncomplete = function () { resolve(req ? req.result : null); };
+          tx.onerror = function () { reject(tx.error || new Error("idb")); };
+          tx.onabort = function () { reject(tx.error || new Error("idb-abort")); };
+        } catch (e) { reject(e); }
+      });
+    });
+  }
+  function writeMirror(key, text, savedAt) {
+    return idb("readwrite", function (os) { return os.put(text, key); })
+      .then(function () { setStatus({ mirror: "ok", mirrorAt: savedAt }); notify(); return true; })
+      .catch(function () { setStatus({ mirror: "fail" }); notify(); return false; });
+  }
+  function readMirror(key) {
+    return idb("readonly", function (os) { return os.get(key); })
+      .then(function (raw) { return typeof raw === "string" ? raw : null; })
+      .catch(function () { setStatus({ mirror: "fail" }); return null; });
+  }
+
+  /* ---------- API ---------- */
+  function save(key, s) {
+    var text;
+    try { text = JSON.stringify(s); } catch (e) { setStatus({ local: "fail", localError: "error" }); return false; }
+    setStatus({ savedAt: s.savedAt || "" });
+    var ok = writeLocal(key, text);
+    writeMirror(key, text, s.savedAt || "");
+    return ok;
+  }
+  /* Dữ liệu chỉ còn trong trang đang mở: localStorage không ghi được và bản dự phòng cũng không (hoặc chưa) ghi được. */
+  function atRisk() { return status.local === "fail" && status.mirror !== "ok"; }
+  function info() { return Object.assign({}, status, { atRisk: atRisk() }); }
+
+  function onChange(fn) { listener = fn; }
+
+  LC.store = { readLocal: readLocal, save: save, readMirror: readMirror, info: info, atRisk: atRisk, reasonOf: reasonOf, onChange: onChange };
+})(window.LC = window.LC || {});
+</script>
+<script>
 /* Máy gắp túi đen · Cyber Weekend 26–30/11/2026 (Admin 21/11 dời từ 27/11) · bộ chia quà.
    Port từ vòng quay 11/11 (vong_quay_1111/index.html), giữ nguyên nhịp + suất theo đợt 50 khách. Khác bản 11/11:
    - bỏ hẳn quà củ sạc 20W (hết hàng) và ô thua lượt: lượt nào cũng có quà;
@@ -863,22 +959,34 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function seedState() {
     return { version: 1, spins: [], ledger: withDefaultStock([]), extra: {}, custom: [], quota: {}, plan: {}, muted: false, mode: "event", theme: "bf", contentAlt: false };
   }
+  /* Chuẩn hóa 1 bản lưu (object) → state; sai cấu trúc → null. savedAt = lúc lưu (chọn bản mới nhất giữa localStorage và dự phòng). */
+  function normalize(s) {
+    if (!s || s.version !== 1 || !Array.isArray(s.spins) || !Array.isArray(s.ledger)) { return null; }
+    return { version: 1, spins: s.spins, ledger: withDefaultStock(s.ledger), extra: s.extra || {},
+             custom: Array.isArray(s.custom) ? s.custom : [],
+             quota: s.quota && typeof s.quota === "object" ? s.quota : {},
+             plan: s.plan && typeof s.plan === "object" ? s.plan : {},
+             muted: !!s.muted, mode: s.mode === "content" ? "content" : "event",
+             theme: s.theme === "cyber" ? "cyber" : "bf", contentAlt: s.contentAlt === true,
+             savedAt: typeof s.savedAt === "string" ? s.savedAt : "" };
+  }
+  function parseState(raw) {
+    if (!raw) { return null; }
+    try { return normalize(JSON.parse(raw)); } catch (e) { return null; }
+  }
   function loadState() {
-    try {
-      var raw = window.localStorage.getItem(CFG.key);
-      if (!raw) { return seedState(); }
-      var s = JSON.parse(raw);
-      if (!s || s.version !== 1 || !Array.isArray(s.spins) || !Array.isArray(s.ledger)) { return seedState(); }
-      return { version: 1, spins: s.spins, ledger: withDefaultStock(s.ledger), extra: s.extra || {},
-               custom: Array.isArray(s.custom) ? s.custom : [],
-               quota: s.quota && typeof s.quota === "object" ? s.quota : {},
-               plan: s.plan && typeof s.plan === "object" ? s.plan : {},
-               muted: !!s.muted, mode: s.mode === "content" ? "content" : "event",
-               theme: s.theme === "cyber" ? "cyber" : "bf", contentAlt: s.contentAlt === true };
-    } catch (e) { return seedState(); }
+    var read = LC.store ? LC.store.readLocal(CFG.key) : null;
+    return parseState(read) || seedState();
   }
   function saveState(s) {
-    try { window.localStorage.setItem(CFG.key, JSON.stringify(s)); return true; } catch (e) { return false; }
+    return LC.store ? LC.store.save(CFG.key, s) : false;
+  }
+  /* Bản mới hơn (theo savedAt, rồi theo số lượt + dòng kho) giữa 2 bản lưu; thiếu 1 bên thì lấy bên còn lại. */
+  function newerState(a, b) {
+    if (!a) { return b; }
+    if (!b) { return a; }
+    if ((a.savedAt || "") !== (b.savedAt || "")) { return (b.savedAt || "") > (a.savedAt || "") ? b : a; }
+    return b.spins.length + b.ledger.length > a.spins.length + a.ledger.length ? b : a;
   }
 
   /* ---------- kho (hàm thuần) ---------- */
@@ -1066,12 +1174,152 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   LC.engine = {
     prizeOf: prizeOf, customOf: customOf, shownCustom: shownCustom, stockKeys: stockKeys, variantsOf: variantsOf, variantOf: variantOf,
     lookOf: lookOf, glowOf: glowOf, seedState: seedState, loadState: loadState, saveState: saveState,
+    normalize: normalize, parseState: parseState, newerState: newerState,
     ledgerSum: ledgerSum, liveSpins: liveSpins, givenOf: givenOf, pendingOf: pendingOf, leftOf: leftOf, stockIn: stockIn,
     isFiller: isFiller, windowSpins: windowSpins, playNo: playNo, inWindow: inWindow, slotsLeft: slotsLeft, windowGiven: windowGiven,
     available: available, quotaOf: quotaOf, quotaLeft: quotaLeft, giftKeys: giftKeys, giftPool: giftPool, specialsLeft: specialsLeft,
     fillerKeys: fillerKeys, canPlay: canPlay, rhythmNow: rhythmNow, dueChance: dueChance, pickPrize: pickPrize, pickColour: pickColour, pickContent: pickContent, stockEntry: stockEntry, giveEntry: giveEntry,
     needsPick: needsPick, defaultPick: defaultPick, newPlay: newPlay, confirmPlay: confirmPlay, undoLast: undoLast
   };
+})(window.LC = window.LC || {});
+</script>
+<script>
+/* Máy gắp · sao lưu / khôi phục lịch sử quà (Admin 28/11 "lịch sử quà tặng trên đó phải còn").
+   - Sao lưu: 1 file .json chứa nguyên dữ liệu máy (lượt gắp, sổ kho, quà thêm, suất, giao diện).
+   - Khôi phục: nhận file .json đó, HOẶC 2 file CSV mà bản cũ xuất ra ("CSV lượt gắp" + "CSV lịch sử kho"), dựng lại lượt thật + sổ kho.
+   Khôi phục THAY lịch sử hiện có bằng lịch sử trong file (file là bản đầy đủ lúc xuất). Hàm thuần: trả state mới, không tự lưu. */
+(function (LC) {
+  "use strict";
+  var E = LC.engine;
+  var CFG = LC.CFG;
+  var APP = "lucas-may-gap";
+
+  function backupText(s, exportedAt) {
+    return JSON.stringify({ app: APP, key: CFG.key, exportedAt: exportedAt, state: s }, null, 1);
+  }
+  function fromJson(text) {
+    var data;
+    try { data = JSON.parse(String(text).replace(/^﻿/, "")); } catch (e) { return { error: "File .json hỏng, không đọc được" }; }
+    var s = E.normalize(data && data.app === APP ? data.state : data);
+    if (!s) { return { error: "File .json không phải bản sao lưu máy gắp" }; }
+    return { state: s, spins: E.liveSpins(s).length, ledger: s.ledger.length };
+  }
+
+  /* ---------- CSV (bản cũ xuất, có BOM, ô trong nháy kép, xuống dòng CRLF) ---------- */
+  function parseCsv(text) {
+    var src = String(text).replace(/^﻿/, "");
+    var rows = []; var row = []; var cell = ""; var quoted = false;
+    for (var i = 0; i < src.length; i += 1) {
+      var ch = src[i];
+      if (quoted) {
+        if (ch === "\"" && src[i + 1] === "\"") { cell += "\""; i += 1; }
+        else if (ch === "\"") { quoted = false; }
+        else { cell += ch; }
+      } else if (ch === "\"") { quoted = true; }
+      else if (ch === ",") { row.push(cell); cell = ""; }
+      else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && src[i + 1] === "\n") { i += 1; }
+        row.push(cell); rows.push(row); row = []; cell = "";
+      } else { cell += ch; }
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows.filter(function (r) { return r.some(function (c) { return c !== ""; }); });
+  }
+  function kindOfCsv(rows) {
+    var head = (rows[0] || []).join("|");
+    if (/^STT\|Thời gian\|Ngày\|Giải\|Quà/.test(head)) { return "spins"; }
+    if (/^Thời gian\|Loại\|Quà\|Màu/.test(head)) { return "stock"; }
+    return "";
+  }
+  var YEAR = Number(CFG.start.slice(0, 4));
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  /* "HH:MM DD/MM" (giờ máy) → ISO; năm lấy theo chương trình. */
+  function isoOf(text, seq) {
+    var m = /^(\d{1,2}):(\d{2}) (\d{1,2})\/(\d{1,2})$/.exec(String(text).trim());
+    if (!m) { return null; }
+    var d = new Date(YEAR, Number(m[4]) - 1, Number(m[3]), Number(m[1]), Number(m[2]), 0, seq % 1000);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  function dayOf(text) {
+    var m = /^(\d{1,2})\/(\d{1,2})$/.exec(String(text).trim());
+    return m ? YEAR + "-" + pad(Number(m[2])) + "-" + pad(Number(m[1])) : "";
+  }
+
+  /* Tên quà / tên màu trong CSV → mã trong máy; tên lạ thì thêm quà / màu mới (để không mất dòng nào). */
+  function resolver(base) {
+    var custom = (base.custom || []).slice();
+    var extraYoyo = ((base.extra && base.extra.yoyo) || []).slice();
+    var stamp = Date.now();
+    function ctx() { return { custom: custom, extra: Object.assign({}, base.extra, { yoyo: extraYoyo }) }; }
+    function prizeKey(name) {
+      var known = Object.keys(CFG.prizes).filter(function (k) { return CFG.prizes[k].name === name; })[0];
+      if (known) { return known; }
+      var mine = custom.filter(function (c) { return c.name === name; })[0];
+      if (mine) { return mine.id; }
+      var gift = { id: "c" + stamp + custom.length, name: name, img: "", hidden: false };
+      custom = custom.concat([gift]);
+      return gift.id;
+    }
+    function variantId(prize, name) {
+      if (!name) { return ""; }
+      var hit = E.variantsOf(prize, ctx()).filter(function (v) { return v.name === name; })[0];
+      if (hit) { return hit.id; }
+      if (prize !== "yoyo") { return E.variantsOf(prize, ctx())[0] ? E.variantsOf(prize, ctx())[0].id : name; }
+      var colour = { id: "c" + stamp + "y" + extraYoyo.length, name: name, swatch: "#9aa7b8", qty: 0 };
+      extraYoyo = extraYoyo.concat([colour]);
+      return colour.id;
+    }
+    return { prizeKey: prizeKey, variantId: variantId, ctx: ctx };
+  }
+
+  var STATUS = { void: "Đã hoàn tác", pending: "Chờ chọn màu" };
+  function spinsFrom(rows, R) {
+    var base = 0;
+    return rows.slice(1).map(function (r, i) {
+      var t = isoOf(r[1], i);
+      if (!t) { return null; }
+      var prize = R.prizeKey(r[4]);
+      var pending = r[6] === STATUS.pending;
+      var variant = pending ? "" : R.variantId(prize, r[5]);
+      var id = Math.max(Date.parse(t), base + 1);
+      base = id;
+      return { id: id, t: t, day: dayOf(r[2]) || t.slice(0, 10), prize: prize, variant: variant, landed: prize === "yoyo" ? variant : "",
+               test: false, content: false, demo: false, void: r[6] === STATUS.void, handed: !pending };
+    }).filter(Boolean);
+  }
+  function ledgerFrom(rows, R) {
+    var kinds = {};
+    Object.keys(CFG.kinds).forEach(function (k) { kinds[CFG.kinds[k]] = k; });
+    return rows.slice(1).map(function (r, i) {
+      var t = isoOf(r[0], i);
+      var qty = Number(r[4]);
+      if (!t || !isFinite(qty)) { return null; }
+      var prize = R.prizeKey(r[2]);
+      return { id: "r-" + i + "-" + Date.parse(t), t: t, prize: prize, variant: R.variantId(prize, r[3]), qty: qty,
+               kind: kinds[r[1]] || r[1], note: r[6] || "" };
+    }).filter(Boolean);
+  }
+  /* 2 file CSV (thứ tự nào cũng được) → state = base với lượt thật + sổ kho lấy từ file; lượt demo / content của base giữ nguyên. */
+  function fromCsv(texts, base) {
+    var parsed = texts.map(parseCsv);
+    var spinsRows = parsed.filter(function (r) { return kindOfCsv(r) === "spins"; })[0];
+    var stockRows = parsed.filter(function (r) { return kindOfCsv(r) === "stock"; })[0];
+    if (!spinsRows || !stockRows) { return { error: "Cần đủ 2 file: “CSV lượt gắp” và “CSV lịch sử kho”" }; }
+    var R = resolver(base);
+    var spins = spinsFrom(spinsRows, R);
+    var ledger = ledgerFrom(stockRows, R);
+    var c = R.ctx();
+    var s = E.normalize(Object.assign({}, base, { spins: base.spins.filter(function (x) { return x.test; }).concat(spins), ledger: ledger, custom: c.custom, extra: c.extra }));
+    return s ? { state: s, spins: spins.length, ledger: ledger.length } : { error: "Không dựng lại được dữ liệu từ CSV" };
+  }
+  /* files = [{ name, text }] → { state, spins, ledger } hoặc { error }. */
+  function fromFiles(files, base) {
+    var json = files.filter(function (f) { return /\.json$/i.test(f.name) || /^\s*\{/.test(f.text); })[0];
+    if (json) { return fromJson(json.text); }
+    return fromCsv(files.map(function (f) { return f.text; }), base);
+  }
+
+  LC.restore = { backupText: backupText, fromJson: fromJson, fromCsv: fromCsv, fromFiles: fromFiles, parseCsv: parseCsv };
 })(window.LC = window.LC || {});
 </script>
 <script>
@@ -3845,7 +4093,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   var CFG = LC.CFG;
   var esc = LC.reveal.esc;
   var $ = function (id) { return document.getElementById(id); };
-  var admin = { open: false, tab: "overview", undoArmed: false, resetArmed: false, msg: "", pendingMode: null, learn: null };
+  var admin = { open: false, tab: "overview", undoArmed: false, resetArmed: false, msg: "", pendingMode: null, learn: null, pendingRestore: null, restoreMsg: "" };
   function st() { return LC.app.state(); }
   function persist(next) { LC.app.persist(next); }
   function setAdmin(patch) { admin = U.assign(admin, patch); }
@@ -3910,7 +4158,8 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     var demo = LC.app.isDemo();
     var content = s.mode === "content";
     var noStock = CFG.after.every(function (k) { return E.leftOf(k, s) <= 0; });
-    return "<p>Chế độ: <b>" + (content ? "Content (quay video)" : (demo ? "Demo (trước " + U.shortDay(CFG.start) + ")" : "Sự kiện")) + "</b>" +
+    var risk = LC.store.atRisk() ? "<p class=\"cg-alert\">Máy chưa lưu được dữ liệu: KHÔNG tắt / tải lại trang · vào tab Sao lưu → Tải bản sao lưu.</p>" : "";
+    return risk + "<p>Chế độ: <b>" + (content ? "Content (quay video)" : (demo ? "Demo (trước " + U.shortDay(CFG.start) + ")" : "Sự kiện")) + "</b>" +
       (demo ? " · lượt chơi trước " + U.shortDay(CFG.start) + " không trừ kho, không tính suất." : "") +
       (content ? " · không trừ kho." : "") + " Cửa hàng " + CFG.openHour + "h–" + CFG.closeHour + "h.</p>" +
       (noStock ? "<p class=\"cg-alert\">Chưa nhập kho túi YOYO / móc khóa: khi chạy thật, hết hai món này thì máy khóa (màn hình “Hết quà”) tới khi nhập thêm. Vào tab Tồn kho để nhập.</p>" : "") +
@@ -4110,9 +4359,59 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     if (admin.open && admin.tab === "dial") { render(); }
     if (p.done) { LC.app.render(); }
   }
+  /* ---------- Sao lưu (Admin 28/11: máy quầy báo không lưu được, lịch sử quà phải còn) ---------- */
+  var LOCAL_TEXT = { quota: "ĐẦY", blocked: "BỊ CHẶN", error: "LỖI" };
+  function backupHtml() {
+    var i = LC.store.info();
+    var local = i.local === "fail" ? LOCAL_TEXT[i.localError] || "LỖI" : (i.local === "ok" ? "ổn" : "chưa ghi");
+    var mirror = i.mirror === "ok" ? "ổn" : (i.mirror === "fail" ? "không ghi được" : "chưa ghi");
+    var pend = admin.pendingRestore;
+    return "<p id=\"cgStoreNow\">Bộ nhớ chính: <b>" + local + "</b> · bản dự phòng: <b>" + mirror + "</b>" + (i.savedAt ? " · lưu lần cuối " + esc(U.timeText(i.savedAt)) : "") + "</p>" +
+      (i.atRisk ? "<p class=\"cg-alert\">Dữ liệu hiện CHỈ nằm trong trang đang mở: KHÔNG tắt / tải lại trang. Bấm “Tải bản sao lưu” ngay.</p>" : "") +
+      "<div class=\"cg-row\"><button class=\"cg-btn\" type=\"button\" data-act=\"backup\">Tải bản sao lưu (.json)</button></div>" +
+      "<h3>Khôi phục lịch sử</h3><p>Chọn 1 file sao lưu .json, HOẶC chọn cùng lúc 2 file CSV của bản cũ (“CSV lượt gắp” + “CSV lịch sử kho”). " +
+      "Lịch sử trên máy sẽ được THAY bằng lịch sử trong file; trước khi thay, máy tự tải 1 bản sao lưu của dữ liệu hiện tại.</p>" +
+      "<div class=\"cg-row\"><input id=\"cgRestoreFiles\" type=\"file\" accept=\".json,.csv,application/json,text/csv\" multiple>" +
+      "<button class=\"cg-btn is-soft\" type=\"button\" data-act=\"restoreread\">Đọc file</button>" +
+      (pend ? "<button class=\"cg-btn is-red\" type=\"button\" data-act=\"restoreok\">Xác nhận khôi phục</button>" : "") + "</div>" +
+      (admin.restoreMsg ? "<p id=\"cgRestoreMsg\"><b>" + esc(admin.restoreMsg) + "</b></p>" : "") +
+      "<p>Bộ nhớ chính BỊ CHẶN (Chrome): Cài đặt → Quyền riêng tư và bảo mật → Cài đặt trang web → Dữ liệu trên thiết bị → cho phép trang lưu dữ liệu " +
+      "(hoặc thêm uroners24.github.io vào danh sách được phép). Tải bản sao lưu TRƯỚC, đổi cài đặt, tải lại trang rồi Khôi phục nếu lịch sử trống.</p>";
+  }
+  function readText(file) {
+    return new Promise(function (resolve) {
+      try {
+        var r = new FileReader();
+        r.onload = function () { resolve({ name: file.name, text: String(r.result || "") }); };
+        r.onerror = function () { resolve({ name: file.name, text: "" }); };
+        r.readAsText(file, "utf-8");
+      } catch (e) { resolve({ name: file.name, text: "" }); }
+    });
+  }
+  function restoreRead() {
+    var input = $("cgRestoreFiles");
+    var files = input && input.files ? Array.prototype.slice.call(input.files) : [];
+    if (!files.length) { setAdmin({ pendingRestore: null, restoreMsg: "Chưa chọn file" }); render(); return; }
+    Promise.all(files.map(readText)).then(function (list) {
+      var out = LC.restore.fromFiles(list, st());
+      var now = E.liveSpins(st()).length;
+      setAdmin(out.error ? { pendingRestore: null, restoreMsg: out.error } :
+        { pendingRestore: out, restoreMsg: "File có " + out.spins + " lượt gắp thật, " + out.ledger + " dòng sổ kho (máy đang có " + now + " lượt). Bấm “Xác nhận khôi phục” để thay." });
+      render();
+    });
+  }
+  function backupName(tag) { return "may-gap_sao-luu_" + tag + "_" + new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-") + ".json"; }
+  function restoreOk() {
+    var pend = admin.pendingRestore;
+    if (!pend) { return; }
+    download(backupName("truoc-khoi-phuc"), LC.restore.backupText(st(), U.nowIso()), "application/json");
+    persist(pend.state);
+    setAdmin({ pendingRestore: null, restoreMsg: "Đã khôi phục: " + E.liveSpins(st()).length + " lượt gắp thật, " + st().ledger.length + " dòng sổ kho." });
+  }
+
   function render() {
-    var tabs = [["overview", "Tổng quan"], ["gifts", "Kế hoạch quà"], ["stock", "Tồn kho"], ["history", "Lịch sử kho"], ["spins", "Lượt gắp"], ["dial", "Núm xoay"]];
-    var body = { overview: overviewHtml, gifts: giftsHtml, stock: stockHtml, history: historyHtml, spins: spinsHtml, dial: dialHtml }[admin.tab]();
+    var tabs = [["overview", "Tổng quan"], ["gifts", "Kế hoạch quà"], ["stock", "Tồn kho"], ["history", "Lịch sử kho"], ["spins", "Lượt gắp"], ["dial", "Núm xoay"], ["backup", "Sao lưu"]];
+    var body = { overview: overviewHtml, gifts: giftsHtml, stock: stockHtml, history: historyHtml, spins: spinsHtml, dial: dialHtml, backup: backupHtml }[admin.tab]();
     showLayer("<h2>Quản lý máy gắp · Black Friday</h2><p>Hôm nay " + U.shortDay(LC.app.today()) + " · khách đã chơi " + E.liveSpins(st()).length + " lượt</p><div class=\"cg-tabs\">" + tabs.map(function (t) {
       return "<button class=\"cg-tab" + (admin.tab === t[0] ? " is-on" : "") + "\" type=\"button\" data-act=\"tab\" data-tab=\"" + t[0] + "\">" + t[1] + "</button>";
     }).join("") + "</div>" + (admin.msg ? "<p class=\"cg-err\">" + esc(admin.msg) + "</p>" : "") + body +
@@ -4123,14 +4422,14 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function csvOf(rows) {
     return rows.map(function (r) { return r.map(function (v) { return "\"" + String(v).replace(/"/g, "\"\"") + "\""; }).join(","); }).join("\r\n");
   }
-  function download(name, text) {
+  function download(name, text, type) {
     try {
-      var blob = new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" });
+      var blob = new Blob(type ? [text] : ["﻿" + text], { type: type || "text/csv;charset=utf-8" });
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob); a.download = name;
       document.body.appendChild(a); a.click();
       window.setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
-    } catch (e) { setAdmin({ msg: "Không xuất được CSV trên máy này" }); }
+    } catch (e) { setAdmin({ msg: "Không tải được file trên máy này" }); }
   }
   function csvSpins() {
     var s = st();
@@ -4230,12 +4529,15 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     theme: function (b, parts) { persist(U.assign(st(), { theme: LC.theme.fixed(parts[0]) })); },
     contentalt: function () { persist(U.assign(st(), { contentAlt: st().contentAlt !== true })); },
     csvspins: function () { download("may-gap-black-friday_luot-gap_" + LC.app.today() + ".csv", csvSpins()); },
-    csvstock: function () { download("may-gap-black-friday_lich-su-kho_" + LC.app.today() + ".csv", csvStock()); }
+    csvstock: function () { download("may-gap-black-friday_lich-su-kho_" + LC.app.today() + ".csv", csvStock()); },
+    backup: function () { download(backupName("may-quay"), LC.restore.backupText(st(), U.nowIso()), "application/json"); },
+    restoreok: restoreOk
   };
   function act(name, b) {
     var parts = (b.getAttribute("data-k") || "").split("|");
     setAdmin({ msg: "" });
     if (name === "addgift") { addGift(); return; }
+    if (name === "restoreread") { restoreRead(); return; }
     if (ACTIONS[name]) { ACTIONS[name](b, parts); }
     LC.app.render();
     render();
@@ -4374,7 +4676,24 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
   function today() { return DEBUG_DAY || U.dayOf(new Date()); }
   function isDemo() { return state.mode !== "content" && CFG.start > today(); }
   function isTest() { return state.mode === "content" || isDemo(); }
-  function persist(next) { state = next; ui = U.assign(ui, { saveError: !E.saveState(state) }); }
+  /* Admin 28/11: lưu 2 nơi (localStorage + dự phòng IndexedDB, xem store.js); chỉ báo lỗi khi dữ liệu không còn nơi nào giữ. */
+  var saves = 0;
+  function persist(next) {
+    saves += 1;
+    state = U.assign(next, { savedAt: U.nowIso() });
+    E.saveState(state);
+    ui = U.assign(ui, { saveError: LC.store.atRisk() });
+  }
+  /* Mở trang: lấy bản mới hơn giữa localStorage và bản dự phòng (localStorage đầy / bị chặn thì lịch sử vẫn về đủ). */
+  function adoptMirror() {
+    LC.store.readMirror(CFG.key).then(function (raw) {
+      var mirror = E.parseState(raw);
+      if (mirror && saves === 0 && !busy() && E.newerState(state, mirror) === mirror && mirror !== state) { state = mirror; }
+      E.saveState(state);
+      ui = U.assign(ui, { saveError: LC.store.atRisk() });
+      if (!busy()) { render(); }
+    });
+  }
   function findRec(id) { return state.spins.filter(function (x) { return x.id === id; })[0] || null; }
   function busy() { var p = root.getAttribute("data-phase"); return p !== "idle" || !!ui.recId; }
   /* Lượt thật mà kho không còn món nào ra được → khóa (demo / Content luôn chơi được). */
@@ -4498,7 +4817,10 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       "<span class=\"cg-pn\"><small>Giải đặc biệt</small><b>Quà bí ẩn</b></span></li>";
   }
   function warnText() {
-    if (ui.saveError) { return "Không lưu được trên máy này · tắt duyệt riêng tư của Safari"; }
+    if (ui.saveError) {
+      var why = LC.store.info().localError;
+      return (why === "quota" ? "Bộ nhớ trình duyệt đầy" : (why === "blocked" ? "Trình duyệt đang chặn lưu dữ liệu" : "Chưa lưu được dữ liệu")) + " · đừng tắt trang · Quản lý → Sao lưu";
+    }
     if (!isTest() && CFG.after.every(function (k) { return E.leftOf(k, state) <= 0; })) { return "Chưa nhập kho quà · Quản lý → Tồn kho"; }
     return "";
   }
@@ -4859,6 +5181,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
       if (b.getAttribute("data-act") === "done") { finish(); }
     });
     bindPad(); bindKeyboard(); bindBrand(); LC.admin.bind();
+    LC.store.onChange(function () { ui = U.assign(ui, { saveError: LC.store.atRisk() }); if (!busy()) { render(); } });
     window.addEventListener("resize", layout);
     document.addEventListener("visibilitychange", function () {
       if (document.visibilityState === "visible") { wakeLock = null; render(); } else { LC.music.stop(0.1); LC.audio.motorOff(); }
@@ -4888,6 +5211,7 @@ html,body{margin:0;height:100%;overflow:hidden;background:#07070a;overscroll-beh
     }
   } catch (e) { layout(); }
   restorePending();
+  adoptMirror();
   R.warmBags();
   /* MacBook (23/11): dựng sẵn bộ âm thanh lúc máy đang chờ (tạo AudioContext + 2 giây tiếng ồn mất ~25–50 ms trên máy cũ) thay vì
      đúng lúc khách bấm phím đầu tiên → hết cú khựng khi BẮT ĐẦU lượt đầu. Chrome kiosk chạy --autoplay-policy=no-user-gesture-required;
